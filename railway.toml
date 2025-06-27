@@ -1,12 +1,2 @@
 [build]
 builder = "dockerfile"
-
-[deploy]
-startCommand = "code-server --bind-addr 0.0.0.0:$PORT --auth password project"
-healthcheckPath = "/"
-healthcheckTimeout = 300
-restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 3
-
-[env]
-PASSWORD = "${{RAILWAY_SERVICE_NAME}}-${{RAILWAY_ENVIRONMENT}}"
