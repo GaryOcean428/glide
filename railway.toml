@@ -1,0 +1,14 @@
+[build]
+builder = "dockerfile"
+
+[deploy]
+startCommand = "code-server --bind-addr 0.0.0.0:$PORT --auth password /app"
+healthcheckPath = "/"
+healthcheckTimeout = 100
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+[env]
+NODE_ENV = "production"
+NPM_CONFIG_OPTIONAL = "false"
+ELECTRON_SKIP_BINARY_DOWNLOAD = "1"
