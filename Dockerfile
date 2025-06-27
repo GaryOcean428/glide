@@ -1,41 +1,40 @@
-FROM ubuntu:22.04
+# Use the official code-server image which has everything pre-compiled
+FROM codercom/code-server:4.23.1
 
-# Install system dependencies
+# Switch to root for installation
+USER root
+
+# Install additional tools and dependencies
 RUN apt-get update && apt-get install -y \
+    git \
     curl \
     wget \
-    git \
-    nodejs \
-    npm \
+    vim \
+    nano \
     python3 \
     python3-pip \
-    build-essential \
-    libx11-dev \
-    libxkbfile-dev \
-    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-# Install code-server
-RUN curl -fsSL https://code-server.dev/install.sh | sh
+# Create project directory
+RUN mkdir -p /home/coder/project
+
+# Copy your project files
+COPY . /home/coder/project/
+
+# Change ownership to coder user
+RUN chown -R coder:coder /home/coder/project
+
+# Switch back to coder user
+USER coder
 
 # Set working directory
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-
-# Install dependencies
-RUN npm ci
-
-# Copy application code
-COPY . .
+WORKDIR /home/coder
 
 # Expose port
 EXPOSE 8080
 
 # Set environment variables
 ENV PASSWORD=${PASSWORD:-changeme}
-ENV PORT=8080
 
-# Start code-server
-CMD ["code-server", "--bind-addr", "0.0.0.0:8080", "--auth", "password", "/app"]
+# Start code-server with the project directory
+CMD ["code-server", "--bind-addr", "0.0.0.0:8080", "--auth", "password", "project"]
