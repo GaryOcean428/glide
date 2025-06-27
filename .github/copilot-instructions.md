@@ -1,14 +1,38 @@
-# Coding Guidelines
+---
+applyTo: '**'
+---
 
-## Introduction
+<!--
+Organization-level Copilot custom instructions for VS Code development.
+This file provides AI assistants with guidelines for working effectively
+with the VS Code codebase and following organizational best practices.
+-->
+
+# Organization Copilot Instructions
+
+## Development Approach
+
+- Break complex tasks into logical steps
+- Use modern TypeScript patterns and leverage the VS Code architecture
+- Follow project conventions for state management and service dependencies
+- Implement proper error handling and performance optimization
+- Keep components modular and testable
+- Prioritize security in all implementations
+- Document non-obvious design decisions
+- Prioritize accuracy when asking about technical implementations
+- Respond with clear, minimal explanations and bullet points
+- Use npm for TypeScript and related dependencies (not yarn)
+- Always provide the best long term solution, no quick fixes
+
+## VS Code Coding Guidelines
 
 These are VS Code coding guidelines. Please also review our [Source Code Organisation](https://github.com/microsoft/vscode/wiki/Source-Code-Organization) page.
 
-## Indentation
+### Indentation
 
 We use tabs, not spaces.
 
-## Naming Conventions
+### Naming Conventions
 
 * Use PascalCase for `type` names
 * Use PascalCase for `enum` values
@@ -16,22 +40,22 @@ We use tabs, not spaces.
 * Use camelCase for `property` names and `local variables`
 * Use whole words in names when possible
 
-## Types
+### Types
 
 * Do not export `types` or `functions` unless you need to share it across multiple components
 * Do not introduce new `types` or `values` to the global namespace
 
-## Comments
+### Comments
 
 * When there are comments for `functions`, `interfaces`, `enums`, and `classes` use JSDoc style comments
 
-## Strings
+### Strings
 
 * Use "double quotes" for strings shown to the user that need to be externalized (localized)
 * Use 'single quotes' otherwise
 * All strings visible to the user need to be externalized
 
-## Style
+### Style
 
 * Use arrow functions `=>` over anonymous function expressions
 * Only surround arrow function parameters when necessary. For example, `(x) => x + x` is wrong but the following are correct:
