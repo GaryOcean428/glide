@@ -21,3 +21,10 @@ vscode.db
 product.overrides.json
 *.snap.actual
 .vscode-test
+
+# GIDE OAuth Environment Variables (contains secrets)
+.env
+.env.local
+.env.production
+.env.staging
+
