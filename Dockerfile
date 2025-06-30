@@ -2,7 +2,7 @@
 FROM node:20
 
 # Install code-server
-RUN npm install -g code-server
+RUN npm install -g code-server --unsafe-perm
 
 # Install yarn
 USER root
