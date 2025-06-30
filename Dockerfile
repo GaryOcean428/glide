@@ -1,7 +1,10 @@
-# Use the latest official code-server image
-FROM codercom/code-server:latest
+# Use a specific Node.js version
+FROM node:20
 
-# Install yarn (if not already available)
+# Install code-server
+RUN npm install -g code-server
+
+# Install yarn
 USER root
 RUN apt-get update && \
     apt-get install -y curl gnupg && \
@@ -9,6 +12,9 @@ RUN apt-get update && \
     echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
     apt-get update && apt-get install -y yarn && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Create a non-root user
+RUN useradd -ms /bin/bash coder
 
 # Copy project files to workspace
 COPY . /home/coder/workspace
@@ -22,6 +28,7 @@ RUN chown -R coder:coder /home/coder/workspace && \
     chmod +x /home/coder/start.sh
 
 USER coder
+WORKDIR /home/coder
 
 # Build the Gide Coding Agent extension
 WORKDIR /home/coder/workspace/extensions/gide-coding-agent
