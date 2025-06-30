@@ -18,6 +18,10 @@ vscode.db
 /.profile-oss
 /cli/target
 /cli/openssl
+
+# Package manager lock files - use yarn.lock instead
+package-lock.json
+*/package-lock.json
 product.overrides.json
 *.snap.actual
 .vscode-test

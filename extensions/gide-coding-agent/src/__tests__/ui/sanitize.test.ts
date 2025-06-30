@@ -15,7 +15,7 @@ describe('Sanitization Utilities', () => {
 		it('should escape HTML entities', () => {
 			const input = '<script>alert("xss")</script>';
 			const result = sanitize.html(input);
-			expect(result).toBe('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;');
+			expect(result).toBe('&lt;script&gt;alert(&quot;xss&quot;)&lt;&#x2F;script&gt;');
 		});
 
 		it('should handle empty and null inputs', () => {
