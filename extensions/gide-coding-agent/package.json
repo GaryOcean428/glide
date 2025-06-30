@@ -1,0 +1,61 @@
+{
+	"name": "gide-coding-agent",
+	"displayName": "Gide Coding Agent",
+	"description": "Inbuilt coding agent for Gide VSCode fork with Railway-hosted agent integration",
+	"version": "1.0.0",
+	"publisher": "gide",
+	"engines": {
+		"vscode": "^1.75.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onStartupFinished"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "gide-coding-agent.openPanel",
+				"title": "Open Coding Agent Panel",
+				"category": "Gide"
+			}
+		],
+		"configuration": {
+			"title": "Gide Coding Agent",
+			"properties": {
+				"gide-coding-agent.agentEndpoint": {
+					"type": "string",
+					"default": "",
+					"description": "The endpoint URL for the Railway-hosted coding agent. Leave empty to use environment variable GIDE_AGENT_ENDPOINT."
+				},
+				"gide-coding-agent.requestTimeout": {
+					"type": "number",
+					"default": 30000,
+					"description": "Request timeout in milliseconds"
+				}
+			}
+		},
+		"remoteCodingAgents": [
+			{
+				"id": "gide-coding-agent",
+				"command": "gide-coding-agent.openPanel",
+				"displayName": "Gide Coding Agent",
+				"description": "Open the integrated coding agent panel"
+			}
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"test": "node out/__tests__/extension.test.js",
+		"lint": "echo 'Linting not configured'"
+	},
+	"devDependencies": {
+		"@types/vscode": "^1.75.0",
+		"@types/node": "22.x",
+		"typescript": "^5.9.0"
+	}
+}

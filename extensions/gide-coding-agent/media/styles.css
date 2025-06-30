@@ -1,0 +1,468 @@
+/* Gide Coding Agent - Webview Styles */
+
+/* CSS Variables for VSCode theming */
+:root {
+	--agent-primary: var(--vscode-button-background);
+	--agent-primary-hover: var(--vscode-button-hoverBackground);
+	--agent-text: var(--vscode-editor-foreground);
+	--agent-background: var(--vscode-editor-background);
+	--agent-border: var(--vscode-input-border);
+	--agent-error: var(--vscode-errorForeground);
+	--agent-success: var(--vscode-testing-iconPassed);
+	--agent-warning: var(--vscode-notificationsWarningIcon-foreground);
+}
+
+/* Global styles */
+* {
+	box-sizing: border-box;
+}
+
+body {
+	font-family: var(--vscode-font-family);
+	font-size: var(--vscode-font-size);
+	background-color: var(--agent-background);
+	color: var(--agent-text);
+	margin: 0;
+	padding: 0;
+	line-height: 1.5;
+}
+
+/* Main container */
+.agent-panel {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 20px;
+}
+
+/* Header styles */
+.agent-header {
+	border-bottom: 1px solid var(--agent-border);
+	padding-bottom: 16px;
+	margin-bottom: 20px;
+}
+
+.agent-header h1 {
+	margin: 0 0 12px 0;
+	font-size: 24px;
+	font-weight: 600;
+}
+
+.agent-status {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 12px;
+}
+
+.endpoint-info {
+	font-family: var(--vscode-editor-font-family);
+	font-size: 12px;
+	color: var(--vscode-descriptionForeground);
+	background: var(--vscode-textCodeBlock-background);
+	padding: 4px 8px;
+	border-radius: 4px;
+	overflow-wrap: break-word;
+}
+
+/* Button styles */
+button {
+	background-color: var(--agent-primary);
+	color: var(--vscode-button-foreground);
+	border: none;
+	padding: 8px 16px;
+	border-radius: 4px;
+	cursor: pointer;
+	font-family: var(--vscode-font-family);
+	font-size: 13px;
+	transition: background-color 0.2s ease;
+}
+
+button:hover:not(:disabled) {
+	background-color: var(--agent-primary-hover);
+}
+
+button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.test-connection-btn {
+	background-color: var(--vscode-button-secondaryBackground);
+	color: var(--vscode-button-secondaryForeground);
+}
+
+.test-connection-btn:hover:not(:disabled) {
+	background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+/* Error and status messages */
+.error-message {
+	background-color: var(--vscode-inputValidation-errorBackground);
+	border: 1px solid var(--vscode-inputValidation-errorBorder);
+	color: var(--agent-error);
+	padding: 12px;
+	border-radius: 4px;
+	margin-bottom: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.clear-error-btn {
+	background: transparent;
+	color: var(--agent-error);
+	padding: 4px 8px;
+	font-size: 16px;
+	min-width: auto;
+}
+
+.connection-status {
+	padding: 8px 12px;
+	border-radius: 4px;
+	margin-bottom: 16px;
+	font-weight: 500;
+}
+
+.connection-status.connected {
+	background-color: var(--vscode-testing-iconPassed);
+	color: white;
+}
+
+.connection-status.disconnected {
+	background-color: var(--vscode-inputValidation-errorBackground);
+	color: var(--agent-error);
+}
+
+/* Form styles */
+.request-form {
+	background: var(--vscode-input-background);
+	border: 1px solid var(--agent-border);
+	border-radius: 6px;
+	padding: 16px;
+	margin-bottom: 24px;
+}
+
+.input-group {
+	margin-bottom: 16px;
+}
+
+.input-group label {
+	display: block;
+	margin-bottom: 8px;
+	font-weight: 500;
+	color: var(--vscode-input-foreground);
+}
+
+textarea {
+	width: 100%;
+	min-height: 100px;
+	background-color: var(--vscode-input-background);
+	color: var(--vscode-input-foreground);
+	border: 1px solid var(--agent-border);
+	border-radius: 4px;
+	padding: 12px;
+	font-family: var(--vscode-editor-font-family);
+	font-size: 14px;
+	resize: vertical;
+	transition: border-color 0.2s ease;
+}
+
+textarea:focus {
+	outline: none;
+	border-color: var(--vscode-focusBorder);
+}
+
+textarea:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.form-actions {
+	display: flex;
+	gap: 12px;
+	align-items: center;
+}
+
+.send-btn {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.clear-btn {
+	background-color: var(--vscode-button-secondaryBackground);
+	color: var(--vscode-button-secondaryForeground);
+}
+
+.clear-btn:hover:not(:disabled) {
+	background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+/* Loading spinner */
+.loading-spinner {
+	display: inline-block;
+	width: 16px;
+	height: 16px;
+	border: 2px solid var(--vscode-progressBar-background);
+	border-radius: 50%;
+	border-top-color: var(--agent-primary);
+	animation: spin 1s linear infinite;
+}
+
+.loading-spinner.small {
+	width: 14px;
+	height: 14px;
+	border-width: 2px;
+}
+
+@keyframes spin {
+	to { transform: rotate(360deg); }
+}
+
+.loading-container {
+	text-align: center;
+	padding: 40px 20px;
+}
+
+.loading-container .loading-spinner {
+	width: 32px;
+	height: 32px;
+	margin-bottom: 16px;
+}
+
+/* Configuration error */
+.config-error {
+	background: var(--vscode-inputValidation-warningBackground);
+	border: 1px solid var(--vscode-inputValidation-warningBorder);
+	border-radius: 6px;
+	padding: 20px;
+	text-align: center;
+}
+
+.config-error h3 {
+	margin-top: 0;
+	color: var(--agent-warning);
+}
+
+.config-error code {
+	background: var(--vscode-textCodeBlock-background);
+	padding: 2px 6px;
+	border-radius: 3px;
+	font-family: var(--vscode-editor-font-family);
+}
+
+/* Conversations */
+.conversations {
+	margin-top: 24px;
+}
+
+.conversations h3 {
+	margin-bottom: 16px;
+	padding-bottom: 8px;
+	border-bottom: 1px solid var(--agent-border);
+}
+
+.no-conversations {
+	text-align: center;
+	padding: 40px 20px;
+	color: var(--vscode-descriptionForeground);
+	font-style: italic;
+}
+
+.conversations-list {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+/* Conversation entries */
+.conversation-entry {
+	background: var(--vscode-textCodeBlock-background);
+	border: 1px solid var(--agent-border);
+	border-radius: 6px;
+	padding: 16px;
+}
+
+.conversation-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 12px;
+	font-size: 12px;
+}
+
+.conversation-timestamp {
+	color: var(--vscode-descriptionForeground);
+	font-family: var(--vscode-editor-font-family);
+}
+
+.conversation-status {
+	font-weight: bold;
+	font-size: 14px;
+}
+
+.conversation-status.success {
+	color: var(--agent-success);
+}
+
+.conversation-status.error {
+	color: var(--agent-error);
+}
+
+.conversation-request,
+.conversation-response {
+	margin-bottom: 12px;
+}
+
+.conversation-request h4,
+.conversation-response h4 {
+	margin: 0 0 8px 0;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--vscode-titleBar-activeForeground);
+}
+
+.conversation-content {
+	background: var(--vscode-input-background);
+	border: 1px solid var(--agent-border);
+	border-radius: 4px;
+	padding: 12px;
+	font-family: var(--vscode-editor-font-family);
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+	max-height: 300px;
+	overflow-y: auto;
+}
+
+.conversation-error {
+	background: var(--vscode-inputValidation-errorBackground);
+	border: 1px solid var(--vscode-inputValidation-errorBorder);
+	color: var(--agent-error);
+	padding: 8px 12px;
+	border-radius: 4px;
+	font-size: 12px;
+	margin-top: 8px;
+}
+
+.conversation-metadata {
+	display: flex;
+	gap: 16px;
+	font-size: 11px;
+	color: var(--vscode-descriptionForeground);
+	margin-top: 8px;
+	flex-wrap: wrap;
+}
+
+.conversation-metadata span {
+	background: var(--vscode-badge-background);
+	color: var(--vscode-badge-foreground);
+	padding: 2px 6px;
+	border-radius: 3px;
+}
+
+/* Error boundary */
+.error-boundary {
+	background: var(--vscode-inputValidation-errorBackground);
+	border: 1px solid var(--vscode-inputValidation-errorBorder);
+	border-radius: 6px;
+	padding: 20px;
+	margin: 16px 0;
+}
+
+.error-boundary-content h3 {
+	margin-top: 0;
+	color: var(--agent-error);
+}
+
+.error-details {
+	margin: 16px 0;
+}
+
+.error-details summary {
+	cursor: pointer;
+	font-weight: 500;
+	margin-bottom: 8px;
+}
+
+.error-message,
+.error-stack {
+	background: var(--vscode-textCodeBlock-background);
+	border: 1px solid var(--agent-border);
+	padding: 12px;
+	border-radius: 4px;
+	font-family: var(--vscode-editor-font-family);
+	font-size: 12px;
+	margin: 8px 0;
+	overflow-x: auto;
+}
+
+.component-stack {
+	margin-top: 12px;
+}
+
+.component-stack h4 {
+	margin: 0 0 8px 0;
+	font-size: 13px;
+}
+
+.error-actions {
+	display: flex;
+	gap: 12px;
+	margin-top: 16px;
+}
+
+.retry-button {
+	background-color: var(--agent-primary);
+}
+
+.reload-button {
+	background-color: var(--vscode-button-secondaryBackground);
+	color: var(--vscode-button-secondaryForeground);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+	.agent-panel {
+		padding: 16px;
+	}
+	
+	.agent-status {
+		flex-direction: column;
+		align-items: stretch;
+	}
+	
+	.form-actions {
+		flex-direction: column;
+	}
+	
+	.conversation-metadata {
+		flex-direction: column;
+		gap: 8px;
+	}
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+	* {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+}
+
+/* Focus styles for keyboard navigation */
+button:focus-visible,
+textarea:focus-visible {
+	outline: 2px solid var(--vscode-focusBorder);
+	outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+	.conversation-entry,
+	.request-form,
+	.error-boundary {
+		border-width: 2px;
+	}
+}
