@@ -8,7 +8,8 @@ const path = require('path');
 const os = require('os');
 const cp = require('child_process');
 const { dirs } = require('./dirs');
-const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const packageManager = process.env['npm_execpath'] && process.env['npm_execpath'].includes('yarn') ? 'yarn' : 'npm';
+const packageCmd = process.platform === 'win32' && packageManager === 'npm' ? 'npm.cmd' : packageManager;
 const root = path.dirname(path.dirname(__dirname));
 
 function log(dir, message) {
@@ -37,7 +38,7 @@ function run(command, args, opts) {
  * @param {string} dir
  * @param {*} [opts]
  */
-function npmInstall(dir, opts) {
+function packageInstall(dir, opts) {
 	opts = {
 		env: { ...process.env },
 		...(opts ?? {}),
@@ -46,7 +47,7 @@ function npmInstall(dir, opts) {
 		shell: true
 	};
 
-	const command = process.env['npm_command'] || 'install';
+	const command = packageManager === 'yarn' ? 'install' : (process.env['npm_command'] || 'install');
 
 	if (process.env['VSCODE_REMOTE_DEPENDENCIES_CONTAINER_NAME'] && /^(.build\/distro\/npm\/)?remote$/.test(dir)) {
 		const userinfo = os.userInfo();
@@ -60,7 +61,7 @@ function npmInstall(dir, opts) {
 		run('sudo', ['chown', '-R', `${userinfo.uid}:${userinfo.gid}`, `${path.resolve(root, dir)}`], opts);
 	} else {
 		log(dir, 'Installing dependencies...');
-		run(npm, command.split(' '), opts);
+		run(packageCmd, command.split(' '), opts);
 	}
 	removeParcelWatcherPrebuild(dir);
 }
@@ -140,7 +141,7 @@ for (let dir of dirs) {
 		if (process.env['LDFLAGS']) { opts.env['LDFLAGS'] = ''; }
 
 		setNpmrcConfig('build', opts.env);
-		npmInstall('build', opts);
+		packageInstall('build', opts);
 		continue;
 	}
 
@@ -169,11 +170,11 @@ for (let dir of dirs) {
 		if (process.env['VSCODE_REMOTE_NODE_GYP']) { opts.env['npm_config_node_gyp'] = process.env['VSCODE_REMOTE_NODE_GYP']; }
 
 		setNpmrcConfig('remote', opts.env);
-		npmInstall(dir, opts);
+		packageInstall(dir, opts);
 		continue;
 	}
 
-	npmInstall(dir, opts);
+	packageInstall(dir, opts);
 }
 
 cp.execSync('git config pull.rebase merges');
