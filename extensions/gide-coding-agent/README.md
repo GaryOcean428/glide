@@ -63,6 +63,45 @@ A comprehensive coding agent extension for the Gide VSCode fork, providing seaml
 
 ## Usage
 
+### Opening the Agent Panel
+
+1. **Command Palette**: Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac)
+   - Type "Gide: Open Coding Agent Panel"
+   - Press Enter
+
+2. **Direct Command**: Use the command `gide-coding-agent.openPanel`
+
+### Using Context Modes
+
+The extension provides four context modes to control what information is shared with the agent:
+
+- **None**: No context sent (most private)
+- **File**: Current file name and language
+- **Selection**: Current file, selected text, and cursor position
+- **Workspace**: Workspace name and file structure information
+
+### Code Suggestions
+
+When the agent provides code in responses, you'll see a "📋 Code Actions" button that allows you to:
+
+1. **Extract Code Blocks**: Automatically detect code in responses
+2. **Insert at Cursor**: Place code at your current cursor position
+3. **Copy to Clipboard**: Copy code for use elsewhere
+4. **Create New File**: Open code in a new VSCode file
+
+### Quick Code Insertion
+
+For rapid code insertion from selected text:
+
+1. Select text containing code suggestions in any editor
+2. Open Command Palette (`Ctrl+Shift+P`)
+3. Run "Gide: Insert Code Suggestion"
+4. Choose from extracted code blocks
+
+### Context Refresh
+
+The extension automatically updates context as you work, but you can manually refresh it using the "🔄 Refresh Context" button in the agent panel.
+
 ### Basic Usage
 
 1. **Open the Agent Panel**
@@ -109,14 +148,31 @@ Access via: `File → Preferences → Settings → Extensions → Gide Coding Ag
 
 | Setting | Description | Default |
 |---------|-------------|---------|
-| `agentEndpoint` | Railway agent endpoint URL | `""` |
-| `requestTimeout` | Request timeout in milliseconds | `30000` |
+| `gide-coding-agent.agentEndpoint` | Railway agent endpoint URL | `""` |
+| `gide-coding-agent.requestTimeout` | Request timeout in milliseconds | `30000` |
 
 ### Environment Variables
 
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `GIDE_AGENT_ENDPOINT` | Primary agent endpoint configuration | `https://your-app.railway.app/api` |
+
+### Context Mode Configuration
+
+The extension supports four context modes that you can select in the UI:
+
+- **None**: No context shared with the agent
+- **File**: Shares current file name and programming language
+- **Selection**: Shares selected text, cursor position, and file info
+- **Workspace**: Shares workspace name and project structure
+
+### Security Configuration
+
+For enhanced security:
+- Use environment variables instead of VSCode settings for endpoints
+- Regularly rotate any API keys used by your Railway service
+- Monitor agent requests through the conversation history
+- Use "None" context mode for sensitive codebases
 
 ## Railway Deployment
 
@@ -214,22 +270,25 @@ npm run lint
 ```
 gide-coding-agent/
 ├── src/
-│   ├── extension.ts          # Extension entry point
-│   ├── webviewHost.ts        # Webview management
+│   ├── extension.ts              # Extension entry point
+│   ├── webviewHost.ts           # Webview management and communication
 │   ├── agent/
-│   │   └── AgentClient.ts    # API client
+│   │   └── AgentClient.ts       # Railway API client
+│   ├── actions/
+│   │   └── codeSuggestions.ts   # Code insertion and actions
 │   ├── state/
-│   │   └── agentStore.ts     # State management
-│   ├── ui/
-│   │   ├── AgentPanel.tsx    # Main UI component
-│   │   └── ErrorBoundary.tsx # Error handling
+│   │   └── agentStore.ts        # Zustand state management
 │   ├── utils/
-│   │   └── sanitize.ts       # Security utilities
-│   └── __tests__/            # Test files
-├── package.json              # Extension manifest
-├── tsconfig.json            # TypeScript config
-├── ARCHITECTURE.md          # Architecture docs
-└── README.md               # This file
+│   │   ├── sanitize.ts          # Security utilities
+│   │   └── contextCollector.ts  # VSCode context collection
+│   └── __tests__/
+│       └── extension.test.ts     # Test suite
+├── media/
+│   └── styles.css               # Webview styling
+├── package.json                 # Extension manifest
+├── tsconfig.json               # TypeScript config
+├── ARCHITECTURE.md             # Architecture documentation
+└── README.md                   # This file
 ```
 
 ## Security
@@ -300,20 +359,40 @@ This extension is part of the Gide project and follows the same licensing terms.
 
 ## Roadmap
 
-### Planned Features
-- [ ] Multiple agent endpoint support
-- [ ] Conversation export/import
-- [ ] Custom model selection
-- [ ] Advanced context integration
-- [ ] Plugin system for extensions
-- [ ] Offline mode capabilities
-- [ ] Conversation search and filtering
+### Completed Features ✅
+- [x] Multi-turn conversation history with Zustand state management
+- [x] Context-aware requests with user-selectable modes (none/file/selection/workspace)
+- [x] Code suggestion extraction and insertion actions
+- [x] VSCode integration (insert at cursor, copy to clipboard, create new file)
+- [x] Comprehensive input/output sanitization
+- [x] Railway endpoint integration with secure configuration
+- [x] Error boundaries and graceful error recovery
+- [x] Real-time context updates and refresh capability
+- [x] Comprehensive test coverage for all features
+- [x] Command palette integration with multiple commands
+
+### Planned Features 🚧
+- [ ] **Streaming Responses**: Real-time response streaming from Railway agents
+- [ ] **Inline Code Completion**: Direct inline suggestions like GitHub Copilot
+- [ ] **Custom Commands**: User-defined agent commands and shortcuts
+- [ ] **Conversation Export**: Export chat history for documentation
+- [ ] **Advanced Context**: Git information, dependencies, and project analysis
+- [ ] **Multi-Agent Support**: Connect to multiple specialized coding agents
+- [ ] **Plugin Architecture**: Support for custom agent integrations
+- [ ] **Performance Optimization**: Response caching and request batching
 
 ### Performance Improvements
 - [ ] Response caching
-- [ ] Streaming responses
 - [ ] Connection pooling
 - [ ] Memory optimization
+- [ ] Advanced conversation search and filtering
+
+### Future Considerations 💭
+- Local model support for offline usage
+- Integration with other coding assistants
+- Advanced code analysis and refactoring
+- Team collaboration features
+- Custom model fine-tuning support
 
 ---
 

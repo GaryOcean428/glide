@@ -5,6 +5,7 @@
 
 import * as vscode from 'vscode';
 import { WebviewHost } from './webviewHost';
+import { CodeSuggestionProvider } from './actions/codeSuggestions';
 
 /**
  * Main extension activation function
@@ -19,8 +20,28 @@ export function activate(context: vscode.ExtensionContext): void {
 	const openPanelCommand = vscode.commands.registerCommand('gide-coding-agent.openPanel', () => {
 		webviewHost.showPanel();
 	});
+	
+	// Register the command to insert code suggestions
+	const insertCodeCommand = vscode.commands.registerCommand('gide-coding-agent.insertCodeSuggestion', async () => {
+		const editor = vscode.window.activeTextEditor;
+		if (!editor) {
+			vscode.window.showWarningMessage('No active editor found');
+			return;
+		}
+		
+		const selection = editor.selection;
+		const selectedText = editor.document.getText(selection);
+		
+		if (!selectedText.trim()) {
+			vscode.window.showWarningMessage('Please select some text that contains code suggestions');
+			return;
+		}
+		
+		await CodeSuggestionProvider.showInteractivePicker(selectedText);
+	});
 
 	context.subscriptions.push(openPanelCommand);
+	context.subscriptions.push(insertCodeCommand);
 	context.subscriptions.push(webviewHost);
 
 	console.log('Gide Coding Agent extension activated successfully');
