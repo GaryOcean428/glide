@@ -1,8 +1,14 @@
 # Use a specific Node.js version
 FROM node:20
 
-# Install code-server
-RUN npm install -g code-server --unsafe-perm
+# Install dependencies for code-server
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    pkg-config \
+    python3
+
+# Clear npm cache and install code-server
+RUN npm cache clean --force && npm install -g code-server --unsafe-perm
 
 # Install yarn
 USER root

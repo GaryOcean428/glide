@@ -15,9 +15,9 @@ if (!process.env['VSCODE_SKIP_NODE_VERSION_CHECK']) {
 	}
 }
 
+// Allow yarn for gide project improvements
 if (process.env['npm_execpath'].includes('yarn')) {
-	console.error('\x1b[1;31m*** Seems like you are using `yarn` which is not supported in this repo any more, please use `npm i` instead. ***\x1b[0;0m');
-	throw new Error();
+	console.log('\x1b[1;32m*** Using yarn package manager for gide project improvements ***\x1b[0;0m');
 }
 
 const path = require('path');
