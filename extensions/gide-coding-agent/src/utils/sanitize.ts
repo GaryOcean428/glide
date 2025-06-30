@@ -226,7 +226,7 @@ export function sanitizeEmail(email: string): string {
 }
 
 /**
- * Complete sanitization suite for agent interactions
+ * Complete sanitization suite for agent interactions with enhanced security
  */
 export const sanitize = {
 	html: sanitizeHtml,
@@ -237,7 +237,32 @@ export const sanitize = {
 	config: sanitizeConfig,
 	truncate: truncateText,
 	email: sanitizeEmail,
-	validate: validateAllowedChars
+	validate: validateAllowedChars,
+	
+	/**
+	 * Enhanced code sanitization for display
+	 */
+	code: (input: string): string => {
+		if (typeof input !== 'string') {
+			return '';
+		}
+		// Preserve code formatting but escape HTML entities
+		return input.replace(/[&<>"']/g, (char) => HTML_ENTITIES[char] || char);
+	},
+
+	/**
+	 * Sanitize markdown content safely
+	 */
+	markdown: (input: string): string => {
+		if (typeof input !== 'string') {
+			return '';
+		}
+		// Basic markdown sanitization - remove script tags but preserve formatting
+		return input
+			.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+			.replace(/javascript:/gi, '')
+			.replace(/on\w+\s*=/gi, '');
+	}
 };
 
 /**

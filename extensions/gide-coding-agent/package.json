@@ -71,7 +71,9 @@
 		"vscode:prepublish": "yarn compile",
 		"compile": "tsc -p ./",
 		"watch": "tsc -watch -p ./",
-		"test": "node out/__tests__/extension.test.js",
+		"test": "jest",
+		"test:watch": "jest --watch",
+		"test:coverage": "jest --coverage",
 		"lint": "echo 'Linting not configured'",
 		"build": "yarn compile",
 		"clean": "rimraf out",
@@ -80,10 +82,21 @@
 	"devDependencies": {
 		"@types/node": "22.x",
 		"@types/vscode": "^1.75.0",
+		"@types/react": "^18.0.0",
+		"@types/react-dom": "^18.0.0",
+		"@types/jest": "^29.0.0",
+		"@testing-library/react": "^14.0.0",
+		"@testing-library/jest-dom": "^6.0.0",
+		"@testing-library/user-event": "^14.0.0",
+		"jest": "^29.0.0",
+		"jest-environment-jsdom": "^29.0.0",
+		"ts-jest": "^29.0.0",
 		"rimraf": "^6.0.1",
 		"typescript": "^5.4.0"
 	},
 	"dependencies": {
+		"react": "^18.2.0",
+		"react-dom": "^18.2.0",
 		"zustand": "^4.4.0"
 	}
 }
