@@ -2,7 +2,7 @@
 	"compilerOptions": {
 		"target": "ES2020",
 		"module": "CommonJS",
-		"lib": ["ES2020"],
+		"lib": ["ES2020", "DOM"],
 		"outDir": "./out",
 		"rootDir": "./src",
 		"skipLibCheck": true,
@@ -12,7 +12,8 @@
 		"allowSyntheticDefaultImports": true,
 		"moduleResolution": "node",
 		"declaration": true,
-		"sourceMap": true
+		"sourceMap": true,
+		"types": ["vscode", "node"]
 	},
 	"include": ["src/**/*"],
 	"exclude": ["node_modules", "out"]
