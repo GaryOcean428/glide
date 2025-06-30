@@ -5,6 +5,9 @@
 
 import * as vscode from 'vscode';
 import * as path from 'path';
+import { ContextWatcher, collectVSCodeContext, formatContextForDisplay } from './utils/contextCollector';
+import { CodeSuggestionProvider } from './actions/codeSuggestions';
+import { selectRelevantContext } from './state/agentStore';
 
 /**
  * Manages the webview hosting the React UI for the coding agent
@@ -13,8 +16,20 @@ import * as path from 'path';
 export class WebviewHost implements vscode.Disposable {
 	private panel: vscode.WebviewPanel | undefined;
 	private readonly disposables: vscode.Disposable[] = [];
+	private contextWatcher: ContextWatcher;
 
-	constructor(private readonly context: vscode.ExtensionContext) {}
+	constructor(private readonly context: vscode.ExtensionContext) {
+		this.contextWatcher = new ContextWatcher();
+		this.disposables.push(this.contextWatcher);
+		
+		// Set up context change listener
+		this.contextWatcher.onContextChanged((context) => {
+			this.panel?.webview.postMessage({
+				type: 'contextChanged',
+				payload: context
+			});
+		});
+	}
 
 	/**
 	 * Shows the coding agent panel, creating it if necessary
@@ -46,6 +61,9 @@ export class WebviewHost implements vscode.Disposable {
 			undefined,
 			this.disposables
 		);
+		
+		// Send initial context
+		this.sendInitialContext();
 
 		// Clean up when panel is disposed
 		this.panel.onDidDispose(
@@ -68,6 +86,15 @@ export class WebviewHost implements vscode.Disposable {
 					break;
 				case 'sendAgentRequest':
 					await this.handleAgentRequest(message.payload);
+					break;
+				case 'getContext':
+					await this.sendCurrentContext();
+					break;
+				case 'refreshContext':
+					await this.refreshContext();
+					break;
+				case 'processCodeSuggestions':
+					await this.handleCodeSuggestions(message.payload);
 					break;
 				case 'error':
 					console.error('Webview error:', message.payload);
@@ -131,10 +158,14 @@ export class WebviewHost implements vscode.Disposable {
 				timeout: requestTimeout
 			});
 
+			// Collect current context based on mode
+			const currentContext = await collectVSCodeContext();
+			const relevantContext = selectRelevantContext(currentContext, payload.contextMode || 'file');
+			
 			const response = await client.sendRequest({
 				id: payload.id,
 				request: payload.request,
-				context: payload.context
+				context: relevantContext || payload.context
 			});
 
 			this.panel?.webview.postMessage({
@@ -173,32 +204,65 @@ export class WebviewHost implements vscode.Disposable {
 			<link href="${stylesUri}" rel="stylesheet">
 			<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
 			<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+			<script src="https://unpkg.com/zustand@4.4.0/umd/index.js"></script>
 			<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 		</head>
 		<body>
 			<div id="root"></div>
 			<script type="text/babel">
-				const { useState, useEffect } = React;
+				const { useState, useEffect, useCallback } = React;
 				const vscode = acquireVsCodeApi();
+				
+				// Use Zustand from global
+				const { create } = window.zustand;
 
-				// Simple state management for the webview
-				const useAgentStore = () => {
-					const [state, setState] = useState({
+				// Agent store using Zustand
+				const useAgentStore = create((set, get) => ({
+					// State
+					config: null,
+					conversations: [],
+					currentRequest: '',
+					isLoading: false,
+					isConnected: false,
+					connectionError: null,
+					error: null,
+					contextMode: 'file',
+					vsCodeContext: null,
+					
+					// Actions
+					setConfig: (config) => set({ config }),
+					updateConfig: (updates) => set((state) => ({ 
+						config: state.config ? { ...state.config, ...updates } : null 
+					})),
+					
+					setCurrentRequest: (currentRequest) => set({ currentRequest }),
+					addConversation: (conversation) => set((state) => ({
+						conversations: [...state.conversations, conversation]
+					})),
+					clearConversations: () => set({ conversations: [] }),
+					
+					setLoading: (isLoading) => set({ isLoading }),
+					setConnected: (isConnected, connectionError = null) => set({ 
+						isConnected, 
+						connectionError 
+					}),
+					setError: (error) => set({ error }),
+					
+					setContextMode: (contextMode) => set({ contextMode }),
+					setVSCodeContext: (vsCodeContext) => set({ vsCodeContext }),
+					
+					reset: () => set({
 						config: null,
-						isLoading: false,
+						conversations: [],
 						currentRequest: '',
-						responses: [],
-						error: null,
+						isLoading: false,
 						isConnected: false,
-						connectionError: null
-					});
-
-					const updateState = (updates) => {
-						setState(prev => ({ ...prev, ...updates }));
-					};
-
-					return { state, updateState };
-				};
+						connectionError: null,
+						error: null,
+						contextMode: 'file',
+						vsCodeContext: null
+					})
+				}));
 
 				// Error Boundary Component
 				class ErrorBoundary extends React.Component {
@@ -243,6 +307,88 @@ export class WebviewHost implements vscode.Disposable {
 					}
 				}
 
+				// Context Mode Selector Component
+				const ContextModeSelector = () => {
+					const { contextMode, setContextMode, vsCodeContext } = useAgentStore();
+					
+					const contextModes = [
+						{ value: 'none', label: 'No Context', description: 'No context will be sent' },
+						{ value: 'file', label: 'Current File', description: 'File name and language' },
+						{ value: 'selection', label: 'Selection', description: 'Selected text and position' },
+						{ value: 'workspace', label: 'Workspace', description: 'Workspace information' }
+					];
+					
+					const formatContext = (context) => {
+						if (!context) return 'No context available';
+						
+						const parts = [];
+						if (context.currentFile) parts.push(\`File: \${context.currentFile}\`);
+						if (context.language) parts.push(\`Language: \${context.language}\`);
+						if (context.selectedText) {
+							const preview = context.selectedText.length > 30 
+								? context.selectedText.substring(0, 30) + '...'
+								: context.selectedText;
+							parts.push(\`Selection: "\${preview}"\`);
+						}
+						if (context.workspaceRoot) parts.push(\`Workspace: \${context.workspaceRoot}\`);
+						
+						return parts.join(' | ') || 'No context available';
+					};
+					
+					return (
+						<div className="context-selector">
+							<h4>Context Mode</h4>
+							<select 
+								value={contextMode} 
+								onChange={(e) => setContextMode(e.target.value)}
+								className="context-mode-select"
+							>
+								{contextModes.map(mode => (
+									<option key={mode.value} value={mode.value}>
+										{mode.label} - {mode.description}
+									</option>
+								))}
+							</select>
+							<div className="current-context">
+								<small>{formatContext(vsCodeContext)}</small>
+							</div>
+						</div>
+					);
+				};
+
+				// Code Suggestion Button Component
+				const CodeSuggestionButton = ({ response }) => {
+					const handleCodeSuggestions = () => {
+						vscode.postMessage({
+							type: 'processCodeSuggestions',
+							payload: { response }
+						});
+					};
+					
+					// Check if response contains code blocks
+					const hasCodeBlocks = response && (
+						response.includes('\`\`\`') || 
+						response.includes('\`') || 
+						response.includes('function') ||
+						response.includes('class ') ||
+						response.includes('const ') ||
+						response.includes('let ') ||
+						response.includes('var ')
+					);
+					
+					if (!hasCodeBlocks) return null;
+					
+					return (
+						<button 
+							onClick={handleCodeSuggestions}
+							className="code-suggestion-btn"
+							title="Extract and insert code suggestions"
+						>
+							📋 Code Actions
+						</button>
+					);
+				};
+
 				// Sanitization utility
 				const sanitize = {
 					html: (str) => {
@@ -268,60 +414,72 @@ export class WebviewHost implements vscode.Disposable {
 
 				// Main Agent Panel Component
 				const AgentPanel = () => {
-					const { state, updateState } = useAgentStore();
+					const store = useAgentStore();
+					const {
+						config, conversations, currentRequest, isLoading, isConnected, 
+						connectionError, error, contextMode, vsCodeContext,
+						setConfig, setCurrentRequest, addConversation, clearConversations,
+						setLoading, setConnected, setError, setVSCodeContext
+					} = store;
 
 					useEffect(() => {
 						// Request config on mount
 						vscode.postMessage({ type: 'getConfig' });
+						vscode.postMessage({ type: 'getContext' });
 
 						// Listen for messages from extension
 						const messageHandler = (event) => {
 							const message = event.data;
 							switch (message.type) {
 								case 'config':
-									updateState({ config: message.payload });
+									setConfig(message.payload);
 									break;
 								case 'agentResponse':
-									const responses = [...state.responses, {
+									const newConversation = {
 										id: message.payload.id,
-										request: state.currentRequest,
+										request: currentRequest,
 										response: message.payload.response,
 										success: message.payload.success,
 										error: message.payload.error,
 										timestamp: new Date().toLocaleTimeString(),
-										metadata: message.payload.metadata
-									}];
-									updateState({ 
-										responses, 
-										isLoading: false,
-										currentRequest: message.payload.success ? '' : state.currentRequest
-									});
+										metadata: message.payload.metadata,
+										context: vsCodeContext
+									};
+									addConversation(newConversation);
+									setLoading(false);
+									if (message.payload.success) {
+										setCurrentRequest('');
+									}
+									break;
+								case 'contextChanged':
+								case 'currentContext':
+									setVSCodeContext(message.payload);
 									break;
 								case 'error':
-									updateState({ 
-										error: message.payload, 
-										isLoading: false 
-									});
+									setError(message.payload);
+									setLoading(false);
 									break;
 							}
 						};
 
 						window.addEventListener('message', messageHandler);
 						return () => window.removeEventListener('message', messageHandler);
-					}, [state.responses, state.currentRequest]);
+					}, []);
 
 					const handleSubmit = (e) => {
 						e.preventDefault();
-						if (!state.currentRequest.trim() || state.isLoading) return;
+						if (!currentRequest.trim() || isLoading) return;
 
-						const sanitizedRequest = sanitize.input(state.currentRequest);
-						updateState({ isLoading: true, error: null });
+						const sanitizedRequest = sanitize.input(currentRequest);
+						setLoading(true);
+						setError(null);
 
 						vscode.postMessage({
 							type: 'sendAgentRequest',
 							payload: {
 								id: Date.now().toString(),
 								request: sanitizedRequest,
+								contextMode: contextMode,
 								context: {
 									timestamp: new Date().toISOString()
 								}
@@ -330,28 +488,30 @@ export class WebviewHost implements vscode.Disposable {
 					};
 
 					const handleInputChange = (e) => {
-						updateState({ currentRequest: e.target.value });
+						setCurrentRequest(e.target.value);
 					};
 
 					const handleClearHistory = () => {
 						if (window.confirm('Are you sure you want to clear all conversations?')) {
-							updateState({ responses: [] });
+							clearConversations();
 						}
 					};
 
 					const handleTestConnection = () => {
-						updateState({ isLoading: true, connectionError: null });
+						setLoading(true);
+						setError(null);
 						// Simulate connection test
 						setTimeout(() => {
-							updateState({ 
-								isLoading: false, 
-								isConnected: Math.random() > 0.5,
-								connectionError: Math.random() > 0.5 ? null : 'Connection test failed'
-							});
+							setLoading(false);
+							setConnected(Math.random() > 0.5, Math.random() > 0.5 ? null : 'Connection test failed');
 						}, 1000);
 					};
 
-					if (!state.config) {
+					const handleRefreshContext = () => {
+						vscode.postMessage({ type: 'refreshContext' });
+					};
+
+					if (!config) {
 						return (
 							<div className="loading-container">
 								<div className="loading-spinner"></div>
@@ -360,7 +520,7 @@ export class WebviewHost implements vscode.Disposable {
 						);
 					}
 
-					if (!state.config.agentEndpoint) {
+					if (!config.agentEndpoint) {
 						return (
 							<div className="config-error">
 								<h3>⚠️ Configuration Required</h3>
@@ -381,23 +541,23 @@ export class WebviewHost implements vscode.Disposable {
 								<h1>🤖 Gide Coding Agent</h1>
 								<div className="agent-status">
 									<span className="endpoint-info">
-										Endpoint: {sanitize.html(state.config.agentEndpoint)}
+										Endpoint: {sanitize.html(config.agentEndpoint)}
 									</span>
 									<button 
 										onClick={handleTestConnection}
-										disabled={state.isLoading}
+										disabled={isLoading}
 										className="test-connection-btn"
 									>
-										{state.isLoading ? 'Testing...' : 'Test Connection'}
+										{isLoading ? 'Testing...' : 'Test Connection'}
 									</button>
 								</div>
 							</header>
 
-							{state.error && (
+							{error && (
 								<div className="error-message">
-									<strong>Error:</strong> {sanitize.html(state.error)}
+									<strong>Error:</strong> {sanitize.html(error)}
 									<button 
-										onClick={() => updateState({ error: null })} 
+										onClick={() => setError(null)} 
 										className="clear-error-btn"
 									>
 										✕
@@ -405,27 +565,29 @@ export class WebviewHost implements vscode.Disposable {
 								</div>
 							)}
 
-							{state.connectionError && (
+							{connectionError && (
 								<div className="connection-status disconnected">
-									❌ {sanitize.html(state.connectionError)}
+									❌ {sanitize.html(connectionError)}
 								</div>
 							)}
 
-							{state.isConnected && (
+							{isConnected && (
 								<div className="connection-status connected">
 									✅ Connected successfully
 								</div>
 							)}
+
+							<ContextModeSelector />
 
 							<form onSubmit={handleSubmit} className="request-form">
 								<div className="input-group">
 									<label htmlFor="request-input">Your Request:</label>
 									<textarea
 										id="request-input"
-										value={state.currentRequest}
+										value={currentRequest}
 										onChange={handleInputChange}
 										placeholder="Enter your coding request here... (e.g., 'Create a function to sort an array', 'Explain this code', 'Fix the bug in this function')"
-										disabled={state.isLoading}
+										disabled={isLoading}
 										rows={4}
 									/>
 								</div>
@@ -433,10 +595,10 @@ export class WebviewHost implements vscode.Disposable {
 								<div className="form-actions">
 									<button 
 										type="submit" 
-										disabled={!state.currentRequest.trim() || state.isLoading}
+										disabled={!currentRequest.trim() || isLoading}
 										className="send-btn"
 									>
-										{state.isLoading ? (
+										{isLoading ? (
 											<>
 												<span className="loading-spinner small"></span>
 												Sending...
@@ -446,11 +608,20 @@ export class WebviewHost implements vscode.Disposable {
 										)}
 									</button>
 									
-									{state.responses.length > 0 && (
+									<button 
+										type="button"
+										onClick={handleRefreshContext}
+										disabled={isLoading}
+										className="refresh-context-btn"
+									>
+										🔄 Refresh Context
+									</button>
+									
+									{conversations.length > 0 && (
 										<button 
 											type="button"
 											onClick={handleClearHistory}
-											disabled={state.isLoading}
+											disabled={isLoading}
 											className="clear-btn"
 										>
 											Clear History
@@ -460,54 +631,58 @@ export class WebviewHost implements vscode.Disposable {
 							</form>
 
 							<div className="conversations">
-								{state.responses.length === 0 ? (
+								{conversations.length === 0 ? (
 									<div className="no-conversations">
 										<p>No conversations yet. Send your first request to get started!</p>
 									</div>
 								) : (
 									<>
-										<h3>Conversation History ({state.responses.length})</h3>
+										<h3>Conversation History ({conversations.length})</h3>
 										<div className="conversations-list">
-											{state.responses.map((response, index) => (
-												<div key={response.id || index} className="conversation-entry">
+											{conversations.map((conversation, index) => (
+												<div key={conversation.id || index} className="conversation-entry">
 													<div className="conversation-header">
 														<span className="conversation-timestamp">
-															{response.timestamp}
+															{conversation.timestamp}
 														</span>
-														<span className={\`conversation-status \${response.success ? 'success' : 'error'}\`}>
-															{response.success ? '✓' : '✗'}
+														<span className={\`conversation-status \${conversation.success ? 'success' : 'error'}\`}>
+															{conversation.success ? '✓' : '✗'}
 														</span>
 													</div>
 													
 													<div className="conversation-request">
 														<h4>Request:</h4>
 														<div className="conversation-content">
-															{sanitize.html(response.request)}
+															{sanitize.html(conversation.request)}
 														</div>
 													</div>
 													
 													<div className="conversation-response">
 														<h4>Response:</h4>
 														<div className="conversation-content">
-															{sanitize.html(response.response)}
+															{sanitize.html(conversation.response)}
 														</div>
 														
-														{response.error && (
+														<div className="conversation-actions">
+															<CodeSuggestionButton response={conversation.response} />
+														</div>
+														
+														{conversation.error && (
 															<div className="conversation-error">
-																Error: {sanitize.html(response.error)}
+																Error: {sanitize.html(conversation.error)}
 															</div>
 														)}
 														
-														{response.metadata && (
+														{conversation.metadata && (
 															<div className="conversation-metadata">
-																{response.metadata.model && (
-																	<span>Model: {sanitize.html(response.metadata.model)}</span>
+																{conversation.metadata.model && (
+																	<span>Model: {sanitize.html(conversation.metadata.model)}</span>
 																)}
-																{response.metadata.tokensUsed && (
-																	<span>Tokens: {response.metadata.tokensUsed}</span>
+																{conversation.metadata.tokensUsed && (
+																	<span>Tokens: {conversation.metadata.tokensUsed}</span>
 																)}
-																{response.metadata.processingTime && (
-																	<span>Time: {response.metadata.processingTime}ms</span>
+																{conversation.metadata.processingTime && (
+																	<span>Time: {conversation.metadata.processingTime}ms</span>
 																)}
 															</div>
 														)}
@@ -532,6 +707,49 @@ export class WebviewHost implements vscode.Disposable {
 			</script>
 		</body>
 		</html>`;
+	}
+
+	/**
+	 * Sends initial context to the webview
+	 */
+	private async sendInitialContext(): Promise<void> {
+		const context = await collectVSCodeContext();
+		this.panel?.webview.postMessage({
+			type: 'contextChanged',
+			payload: context
+		});
+	}
+	
+	/**
+	 * Sends current context to the webview
+	 */
+	private async sendCurrentContext(): Promise<void> {
+		const context = await collectVSCodeContext();
+		this.panel?.webview.postMessage({
+			type: 'currentContext',
+			payload: context
+		});
+	}
+	
+	/**
+	 * Refreshes context and notifies webview
+	 */
+	private async refreshContext(): Promise<void> {
+		await this.contextWatcher.notifyContextChanged();
+	}
+	
+	/**
+	 * Handles code suggestion processing
+	 */
+	private async handleCodeSuggestions(payload: any): Promise<void> {
+		try {
+			if (payload.response) {
+				await CodeSuggestionProvider.showInteractivePicker(payload.response);
+			}
+		} catch (error) {
+			console.error('Error processing code suggestions:', error);
+			vscode.window.showErrorMessage(`Error processing code suggestions: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		}
 	}
 
 	/**
