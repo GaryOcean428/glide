@@ -105,6 +105,78 @@ docker build -t gide-test .
 docker run -p 8080:8080 -e PORT=8080 gide-test
 ```
 
+## Gide Coding Agent Extension
+
+This deployment includes the Gide Coding Agent extension which requires additional configuration.
+
+### Environment Variables
+
+The extension requires the following environment variables to function properly:
+
+#### Required Variables
+- `GIDE_AGENT_ENDPOINT`: URL of your Railway-hosted coding agent service
+  - Example: `https://your-agent-service.railway.app/api/chat`
+
+#### Optional Variables
+- `GIDE_API_KEY`: API key for agent authentication
+- `GIDE_MODEL_PROVIDER`: AI model provider (`openai`, `anthropic`, etc.)
+- `GIDE_MODEL_NAME`: Specific model name (`gpt-4`, `claude-3-sonnet`, etc.)
+- `GIDE_REQUEST_TIMEOUT`: Request timeout in milliseconds (default: 30000)
+
+### Railway Configuration
+
+Set these variables in your Railway service:
+
+```bash
+# Using Railway CLI
+railway variables set GIDE_AGENT_ENDPOINT="https://your-agent-service.railway.app/api/chat"
+railway variables set GIDE_API_KEY="your_api_key_here"
+railway variables set GIDE_MODEL_PROVIDER="openai"
+railway variables set GIDE_MODEL_NAME="gpt-4"
+```
+
+Or through the Railway Dashboard:
+1. Go to your service in Railway dashboard
+2. Click on "Variables" tab
+3. Add each environment variable
+
+### Building the Extension
+
+The extension is built automatically during deployment, but you can build it manually:
+
+```bash
+# Build the Gide extension
+npm run build-gide-extension
+
+# Or build directly
+cd extensions/gide-coding-agent
+yarn install
+yarn build
+```
+
+### Extension Security
+
+- Never hardcode API keys in VSCode settings
+- Use environment variables for all sensitive configuration
+- The extension prioritizes environment variables over VSCode settings
+- All configuration is validated on startup with clear error messages
+
+### Troubleshooting Extension Issues
+
+1. **"Missing required environment variables" error**:
+   - Ensure `GIDE_AGENT_ENDPOINT` is set in Railway variables
+   - Check that the URL is properly formatted with protocol
+
+2. **"Connection Failed" error**:
+   - Verify your agent service is running and accessible
+   - Check that `GIDE_API_KEY` is correct (if required)
+   - Test the endpoint directly with curl
+
+3. **Extension not loading**:
+   - Check Railway deployment logs for build errors
+   - Ensure the extension was built successfully
+   - Verify all dependencies were installed with yarn
+
 ## Best Practices
 
 1. **Port Configuration**: Always use Railway's `$PORT` variable
@@ -112,6 +184,10 @@ docker run -p 8080:8080 -e PORT=8080 gide-test
 3. **Minimal Configuration**: Let Railway handle healthchecks and process management
 4. **Security**: Run containers as non-root users when possible
 5. **Resource Optimization**: Keep Docker images lean and start times fast
+6. **Environment Variables**: Use Railway's environment variables for all configuration
+7. **Extension Security**: Never commit API keys or secrets to version control
+8. **Extension Build**: Ensure extensions are built before deployment
+9. **Dependency Management**: Use yarn for extension dependencies as specified
 
 ## Links and References
 
