@@ -38,6 +38,8 @@ export interface AgentClientConfig {
 	endpoint: string;
 	timeout: number;
 	apiKey?: string;
+	modelProvider?: string;
+	modelName?: string;
 }
 
 /**
@@ -95,12 +97,16 @@ export class AgentClient {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					...(this.config.apiKey && { 'Authorization': `Bearer ${this.config.apiKey}` })
+					...(this.config.apiKey && { 'Authorization': `Bearer ${this.config.apiKey}` }),
+					...(this.config.modelProvider && { 'X-Model-Provider': this.config.modelProvider }),
+					...(this.config.modelName && { 'X-Model-Name': this.config.modelName })
 				},
 				body: JSON.stringify({
 					id: sanitizedRequest.id,
 					request: sanitizedRequest.request,
-					context: sanitizedRequest.context || {}
+					context: sanitizedRequest.context || {},
+					model: this.config.modelName,
+					provider: this.config.modelProvider
 				}),
 				signal: controller.signal
 			});
@@ -235,7 +241,9 @@ export class AgentClient {
 	public getConfig(): Omit<AgentClientConfig, 'apiKey'> {
 		return {
 			endpoint: this.config.endpoint,
-			timeout: this.config.timeout
+			timeout: this.config.timeout,
+			modelProvider: this.config.modelProvider,
+			modelName: this.config.modelName
 		};
 	}
 }

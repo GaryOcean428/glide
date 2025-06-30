@@ -168,11 +168,58 @@ The extension supports four context modes that you can select in the UI:
 
 ### Security Configuration
 
-For enhanced security:
-- Use environment variables instead of VSCode settings for endpoints
-- Regularly rotate any API keys used by your Railway service
-- Monitor agent requests through the conversation history
-- Use "None" context mode for sensitive codebases
+The extension prioritizes security by reading sensitive configuration from environment variables:
+
+#### Security Best Practices
+
+1. **Use Environment Variables**: Never hardcode API keys in VSCode settings
+   ```bash
+   # Secure - environment variable
+   export GIDE_API_KEY="your_api_key_here"
+   
+   # Insecure - don't do this
+   # "gide-coding-agent.apiKey": "hardcoded_key_in_settings"
+   ```
+
+2. **Regular Key Rotation**: Rotate API keys regularly, especially for production
+   ```bash
+   # Update your Railway service
+   railway variables set GIDE_API_KEY="new_rotated_key"
+   ```
+
+3. **Context Mode Selection**: Choose appropriate context sharing levels
+   - **None**: For highly sensitive codebases
+   - **File**: For general development
+   - **Selection**: For specific code assistance
+   - **Workspace**: For project-wide context (use with caution)
+
+4. **Monitoring**: Monitor agent requests through conversation history
+
+5. **Network Security**: Ensure your agent endpoint uses HTTPS
+   ```bash
+   # Secure endpoint
+   GIDE_AGENT_ENDPOINT=https://your-service.railway.app/api/chat
+   
+   # Avoid HTTP in production
+   # GIDE_AGENT_ENDPOINT=http://insecure-endpoint.com/api/chat
+   ```
+
+#### Error Handling
+
+The extension provides clean error messages for missing or invalid configuration:
+
+- Missing `GIDE_AGENT_ENDPOINT`: Shows setup instructions
+- Invalid endpoint URL: Validates URL format
+- Network errors: Provides clear connection failure messages
+- Timeout errors: Suggests timeout adjustment options
+
+#### Configuration Validation
+
+On startup, the extension:
+1. Validates all required environment variables
+2. Checks endpoint URL format
+3. Shows warning messages for missing optional configuration
+4. Provides links to setup documentation
 
 ## Railway Deployment
 
@@ -242,27 +289,133 @@ railway variables set MODEL_NAME=gpt-4
 git clone https://github.com/GaryOcean428/gide.git
 cd gide/extensions/gide-coding-agent
 
-# Install dependencies
-npm install
+# Install dependencies with yarn
+yarn install
 
-# Compile TypeScript
-npm run compile
+# Build the extension
+yarn build
 
-# Watch for changes
-npm run watch
+# Watch for changes during development
+yarn watch
 ```
 
 ### Testing
 
 ```bash
 # Run unit tests
-npm test
+yarn test
 
-# Run with coverage
-npm run test:coverage
+# Run linting (when configured)
+yarn lint
+```
 
-# Run linting
-npm run lint
+## Configuration
+
+### Environment Variables
+
+The extension uses the following environment variables for secure configuration:
+
+#### Required Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `GIDE_AGENT_ENDPOINT` | Railway agent service URL | `https://your-service.railway.app/api/chat` |
+
+#### Optional Variables
+
+| Variable | Description | Default | Example |
+|----------|-------------|---------|---------|
+| `GIDE_API_KEY` | API key for agent authentication | - | `sk-proj-...` |
+| `GIDE_MODEL_PROVIDER` | AI model provider | - | `openai`, `anthropic` |
+| `GIDE_MODEL_NAME` | Specific model to use | - | `gpt-4`, `claude-3-sonnet` |
+| `GIDE_REQUEST_TIMEOUT` | Request timeout (ms) | `30000` | `45000` |
+
+### Setting Up Environment Variables
+
+1. **Copy the environment template:**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Edit the .env file with your values:**
+   ```bash
+   GIDE_AGENT_ENDPOINT=https://your-agent-service.railway.app/api/chat
+   GIDE_API_KEY=your_api_key_here
+   GIDE_MODEL_PROVIDER=openai
+   GIDE_MODEL_NAME=gpt-4
+   ```
+
+3. **Set system environment variables** (recommended for production):
+   
+   **Linux/macOS:**
+   ```bash
+   export GIDE_AGENT_ENDPOINT="https://your-service.railway.app/api/chat"
+   export GIDE_API_KEY="your_api_key_here"
+   export GIDE_MODEL_PROVIDER="openai"
+   export GIDE_MODEL_NAME="gpt-4"
+   ```
+   
+   **Windows:**
+   ```cmd
+   set GIDE_AGENT_ENDPOINT=https://your-service.railway.app/api/chat
+   set GIDE_API_KEY=your_api_key_here
+   set GIDE_MODEL_PROVIDER=openai
+   set GIDE_MODEL_NAME=gpt-4
+   ```
+
+4. **VSCode settings** (less secure for API keys):
+   - Open VSCode settings (`Ctrl/Cmd + ,`)
+   - Search for "gide-coding-agent"
+   - Configure the settings directly
+
+### Production Deployment
+
+For production deployments, ensure all environment variables are set securely:
+
+#### Railway Deployment
+```bash
+# Set environment variables in Railway
+railway variables set GIDE_AGENT_ENDPOINT="https://your-service.railway.app/api/chat"
+railway variables set GIDE_API_KEY="your_api_key_here"
+railway variables set GIDE_MODEL_PROVIDER="openai"
+railway variables set GIDE_MODEL_NAME="gpt-4"
+```
+
+#### Docker Deployment
+```bash
+docker run -e GIDE_AGENT_ENDPOINT="https://your-service.railway.app/api/chat" \
+           -e GIDE_API_KEY="your_api_key" \
+           -e GIDE_MODEL_PROVIDER="openai" \
+           -e GIDE_MODEL_NAME="gpt-4" \
+           your-vscode-image
+```
+
+#### Kubernetes Deployment
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gide-agent-config
+data:
+  api-key: <base64-encoded-api-key>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vscode-with-gide
+spec:
+  template:
+    spec:
+      containers:
+      - name: vscode
+        env:
+        - name: GIDE_AGENT_ENDPOINT
+          value: "https://your-service.railway.app/api/chat"
+        - name: GIDE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: gide-agent-config
+              key: api-key
 ```
 
 ### Project Structure
@@ -315,21 +468,68 @@ gide-coding-agent/
 
 ### Common Issues
 
+#### "Missing required environment variables" Error
+- **Cause**: `GIDE_AGENT_ENDPOINT` not set
+- **Solution**: Set the required environment variable:
+  ```bash
+  export GIDE_AGENT_ENDPOINT="https://your-service.railway.app/api/chat"
+  ```
+- **Alternative**: Configure in VSCode settings (less secure)
+
+#### "Invalid agent endpoint URL" Error
+- **Cause**: Malformed URL in configuration
+- **Solution**: Ensure URL is properly formatted with protocol:
+  ```bash
+  # Correct
+  GIDE_AGENT_ENDPOINT=https://my-service.railway.app/api/chat
+  
+  # Incorrect
+  GIDE_AGENT_ENDPOINT=my-service.railway.app/api/chat
+  ```
+
 #### "Configuration Required" Error
-- **Cause**: Agent endpoint not configured
+- **Cause**: Agent endpoint not configured or empty
 - **Solution**: Set `GIDE_AGENT_ENDPOINT` environment variable or configure in settings
 
 #### "Connection Failed" Error
-- **Cause**: Network issues or agent downtime
-- **Solution**: Check network connection and Railway app status
+- **Cause**: Network issues, agent downtime, or authentication failure
+- **Solutions**:
+  - Check network connection and Railway app status
+  - Verify `GIDE_API_KEY` if your service requires authentication
+  - Test endpoint directly with curl:
+    ```bash
+    curl -X POST -H "Content-Type: application/json" \
+         -H "Authorization: Bearer $GIDE_API_KEY" \
+         -d '{"request":"ping"}' \
+         $GIDE_AGENT_ENDPOINT
+    ```
 
 #### "Request Timeout" Error
 - **Cause**: Agent response taking too long
-- **Solution**: Increase timeout in settings or check agent performance
+- **Solutions**: 
+  - Increase timeout: `GIDE_REQUEST_TIMEOUT=60000` (60 seconds)
+  - Check agent performance and resource allocation
 
 #### React/UI Errors
 - **Cause**: JavaScript errors in the webview
 - **Solution**: Use "Try Again" button or reload the extension
+
+### Environment Variable Debugging
+
+1. **Check if variables are set:**
+   ```bash
+   echo $GIDE_AGENT_ENDPOINT
+   echo $GIDE_API_KEY  # (will show asterisks for security)
+   ```
+
+2. **Verify in VSCode:**
+   - Open VSCode terminal
+   - Run: `printenv | grep GIDE`
+
+3. **Test configuration:**
+   - Open Gide Coding Agent panel
+   - Check for configuration error messages
+   - Look in VSCode Developer Console for detailed logs
 
 ### Debug Mode
 

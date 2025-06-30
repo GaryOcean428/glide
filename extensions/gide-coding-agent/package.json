@@ -38,7 +38,22 @@
 				"gide-coding-agent.requestTimeout": {
 					"type": "number",
 					"default": 30000,
-					"description": "Request timeout in milliseconds"
+					"description": "Request timeout in milliseconds. Can be overridden with GIDE_REQUEST_TIMEOUT environment variable."
+				},
+				"gide-coding-agent.apiKey": {
+					"type": "string",
+					"default": "",
+					"description": "API key for agent authentication. Strongly recommended to use GIDE_API_KEY environment variable instead for security."
+				},
+				"gide-coding-agent.modelProvider": {
+					"type": "string",
+					"default": "",
+					"description": "Model provider (e.g., 'openai', 'anthropic'). Can be overridden with GIDE_MODEL_PROVIDER environment variable."
+				},
+				"gide-coding-agent.modelName": {
+					"type": "string",
+					"default": "",
+					"description": "Specific model name to use. Can be overridden with GIDE_MODEL_NAME environment variable."
 				}
 			}
 		},
@@ -51,16 +66,21 @@
 			}
 		]
 	},
+	"license": "MIT",
 	"scripts": {
-		"vscode:prepublish": "npm run compile",
+		"vscode:prepublish": "yarn compile",
 		"compile": "tsc -p ./",
 		"watch": "tsc -watch -p ./",
 		"test": "node out/__tests__/extension.test.js",
-		"lint": "echo 'Linting not configured'"
+		"lint": "echo 'Linting not configured'",
+		"build": "yarn compile",
+		"clean": "rimraf out",
+		"prebuild": "yarn clean"
 	},
 	"devDependencies": {
-		"@types/vscode": "^1.75.0",
 		"@types/node": "22.x",
+		"@types/vscode": "^1.75.0",
+		"rimraf": "^6.0.1",
 		"typescript": "^5.4.0"
 	},
 	"dependencies": {
