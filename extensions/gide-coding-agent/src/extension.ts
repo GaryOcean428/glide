@@ -6,6 +6,7 @@
 import * as vscode from 'vscode';
 import { WebviewHost } from './webviewHost';
 import { CodeSuggestionProvider } from './actions/codeSuggestions';
+import { checkConfigurationStatus, ENV_VARS } from './utils/config';
 
 /**
  * Main extension activation function
@@ -13,6 +14,24 @@ import { CodeSuggestionProvider } from './actions/codeSuggestions';
  */
 export function activate(context: vscode.ExtensionContext): void {
 	console.log('Gide Coding Agent extension is now active!');
+
+	// Check configuration status on startup
+	const configStatus = checkConfigurationStatus();
+	
+	if (!configStatus.isValid) {
+		const message = `Gide Coding Agent: Missing required environment variables: ${configStatus.missingVars.join(', ')}. ` +
+			'Please configure these variables for the extension to work properly.';
+		vscode.window.showWarningMessage(message, 'Show Setup Instructions').then(selection => {
+			if (selection === 'Show Setup Instructions') {
+				vscode.commands.executeCommand('vscode.open', vscode.Uri.parse('https://github.com/GaryOcean428/gide/blob/main/extensions/gide-coding-agent/README.md#configuration'));
+			}
+		});
+	}
+
+	// Show warnings for missing optional configuration
+	if (configStatus.warnings.length > 0) {
+		console.warn('Gide Coding Agent configuration warnings:', configStatus.warnings);
+	}
 
 	const webviewHost = new WebviewHost(context);
 

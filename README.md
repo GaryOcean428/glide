@@ -68,6 +68,46 @@ This repository includes a Visual Studio Code Dev Containers / GitHub Codespaces
 
 Docker / the Codespace should have at least **4 Cores and 6 GB of RAM (8 GB recommended)** to run full build. See the [development container README](.devcontainer/README.md) for more information.
 
+## Gide Extensions
+
+This Gide fork includes additional extensions not found in the standard VSCode distribution:
+
+### Gide Coding Agent Extension
+
+The `gide-coding-agent` extension provides AI-powered coding assistance through Railway-hosted agents.
+
+#### Building the Gide Extension
+
+The Gide Coding Agent uses yarn for dependency management:
+
+```bash
+# Build the Gide extension specifically
+npm run build-gide-extension
+
+# Or build directly in the extension directory
+cd extensions/gide-coding-agent
+yarn install
+yarn build
+```
+
+#### Configuration
+
+The extension requires environment variables for security. See [`extensions/gide-coding-agent/README.md`](extensions/gide-coding-agent/README.md) for detailed configuration instructions.
+
+Required environment variables:
+- `GIDE_AGENT_ENDPOINT`: Railway agent service URL
+- `GIDE_API_KEY`: API key for authentication (optional)
+- `GIDE_MODEL_PROVIDER`: AI model provider (optional)
+- `GIDE_MODEL_NAME`: Specific model name (optional)
+
+Example setup:
+```bash
+export GIDE_AGENT_ENDPOINT="https://your-service.railway.app/api/chat"
+export GIDE_API_KEY="your_api_key_here"
+export GIDE_MODEL_PROVIDER="openai"
+export GIDE_MODEL_NAME="gpt-4"
+```
+
 ## Code of Conduct
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.

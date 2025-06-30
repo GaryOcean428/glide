@@ -8,6 +8,7 @@ import * as path from 'path';
 import { ContextWatcher, collectVSCodeContext, formatContextForDisplay } from './utils/contextCollector';
 import { CodeSuggestionProvider } from './actions/codeSuggestions';
 import { selectRelevantContext } from './state/agentStore';
+import { getExtensionConfig, validateConfiguration, getSafeConfig } from './utils/config';
 
 /**
  * Manages the webview hosting the React UI for the coding agent
@@ -116,17 +117,25 @@ export class WebviewHost implements vscode.Disposable {
 	 * Sends configuration to the webview
 	 */
 	private async sendConfig(): Promise<void> {
-		const config = vscode.workspace.getConfiguration('gide-coding-agent');
-		const agentEndpoint = config.get<string>('agentEndpoint') || process.env.GIDE_AGENT_ENDPOINT || '';
-		const requestTimeout = config.get<number>('requestTimeout') || 30000;
-
-		this.panel?.webview.postMessage({
-			type: 'config',
-			payload: {
-				agentEndpoint,
-				requestTimeout
-			}
-		});
+		try {
+			const config = getExtensionConfig();
+			validateConfiguration(config);
+			
+			const safeConfig = getSafeConfig(config);
+			
+			this.panel?.webview.postMessage({
+				type: 'config',
+				payload: safeConfig
+			});
+		} catch (error) {
+			console.error('Configuration error:', error);
+			this.panel?.webview.postMessage({
+				type: 'configError',
+				payload: {
+					error: error instanceof Error ? error.message : 'Unknown configuration error'
+				}
+			});
+		}
 	}
 
 	/**
@@ -136,26 +145,15 @@ export class WebviewHost implements vscode.Disposable {
 		const { AgentClient } = await import('./agent/AgentClient');
 		
 		try {
-			const config = vscode.workspace.getConfiguration('gide-coding-agent');
-			const agentEndpoint = config.get<string>('agentEndpoint') || process.env.GIDE_AGENT_ENDPOINT || '';
-			const requestTimeout = config.get<number>('requestTimeout') || 30000;
-
-			if (!agentEndpoint) {
-				this.panel?.webview.postMessage({
-					type: 'agentResponse',
-					payload: {
-						id: payload.id,
-						response: 'Agent endpoint not configured',
-						success: false,
-						error: 'No agent endpoint configured'
-					}
-				});
-				return;
-			}
+			const config = getExtensionConfig();
+			validateConfiguration(config);
 
 			const client = new AgentClient({
-				endpoint: agentEndpoint,
-				timeout: requestTimeout
+				endpoint: config.agentEndpoint,
+				timeout: config.requestTimeout,
+				apiKey: config.apiKey,
+				modelProvider: config.modelProvider,
+				modelName: config.modelName
 			});
 
 			// Collect current context based on mode
