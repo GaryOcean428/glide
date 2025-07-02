@@ -1,47 +1,44 @@
-# Use a specific Node.js version
-FROM node:20
+# Multi-stage build optimized for Railway deployment
+# Stage 1: Build the extension
+FROM node:20-slim AS builder
 
-# Install dependencies for code-server
-RUN apt-get update && apt-get install -y \
+# Install minimal system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    python3 \
     build-essential \
-    pkg-config \
-    python3
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Clear npm cache and install code-server
-RUN npm cache clean --force && npm install -g code-server --unsafe-perm
+# Copy extension source
+COPY extensions/gide-coding-agent /app/extension
+WORKDIR /app/extension
 
-# Install yarn
+# Use npm instead of yarn to avoid certificate issues
+RUN npm config set strict-ssl false \
+    && npm install \
+    && npm run build \
+    && npm config set strict-ssl true
+
+# Stage 2: Runtime with code-server
+FROM codercom/code-server:latest
+
+# Switch to root to copy files
 USER root
-RUN apt-get update && \
-    apt-get install -y curl gnupg && \
-    curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /usr/share/keyrings/yarnkey.gpg > /dev/null && \
-    echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
-    apt-get update && apt-get install -y yarn && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Create a non-root user
-RUN useradd -ms /bin/bash coder
+# Copy the built extension and workspace files
+COPY --from=builder --chown=coder:coder /app/extension /home/coder/workspace/extensions/gide-coding-agent
+COPY --chown=coder:coder . /home/coder/workspace/
+COPY --chown=coder:coder start.sh /home/coder/
 
-# Copy project files to workspace
-COPY . /home/coder/workspace
+# Set permissions
+RUN chmod +x /home/coder/start.sh
 
-# Copy and make start script executable
-COPY start.sh /home/coder/start.sh
-
-# Set proper ownership
-RUN chown -R coder:coder /home/coder/workspace && \
-    chown coder:coder /home/coder/start.sh && \
-    chmod +x /home/coder/start.sh
-
+# Switch back to coder user
 USER coder
 WORKDIR /home/coder
 
-# Build the Gide Coding Agent extension
-WORKDIR /home/coder/workspace/extensions/gide-coding-agent
-RUN yarn install --frozen-lockfile && yarn build
+# Use Railway's PORT variable
+EXPOSE ${PORT:-8080}
 
-# Set working directory back to home
-WORKDIR /home/coder
-
-# Start code-server using the start script
-CMD ["./start.sh"]
+CMD ["/home/coder/start.sh"]

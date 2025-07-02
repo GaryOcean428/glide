@@ -68,16 +68,16 @@
 	},
 	"license": "MIT",
 	"scripts": {
-		"vscode:prepublish": "yarn compile",
+		"vscode:prepublish": "npm run compile",
 		"compile": "tsc -p ./",
 		"watch": "tsc -watch -p ./",
 		"test": "jest",
 		"test:watch": "jest --watch",
 		"test:coverage": "jest --coverage",
 		"lint": "echo 'Linting not configured'",
-		"build": "yarn compile",
+		"build": "npm run compile",
 		"clean": "rimraf out",
-		"prebuild": "yarn clean"
+		"prebuild": "npm run clean"
 	},
 	"devDependencies": {
 		"@types/node": "22.x",
