@@ -28,7 +28,7 @@ RUN chmod +x scripts/*.js
 RUN npm run railway:build
 
 # Create non-root user
-RUN useradd -m -u 1000 railway && chown -R railway:railway /app
+RUN useradd -m -u 1001 railway && chown -R railway:railway /app
 USER railway
 
 # Expose Railway port
