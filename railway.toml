@@ -1,2 +1,21 @@
 [build]
 builder = "dockerfile"
+buildCommand = "npm run railway:build"
+watchPatterns = [
+  "/scripts/**/*.js",
+  "/extensions/**/*.ts",
+  "/extensions/**/*.js",
+  "/package.json"
+]
+
+[deploy]
+startCommand = "npm run railway:start"
+healthcheckPath = "/healthz"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+[env]
+NODE_ENV = "production"
+NIXPACKS_BUILD_CMD = "npm run railway:build"
+NIXPACKS_START_CMD = "npm run railway:start"

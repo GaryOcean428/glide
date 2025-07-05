@@ -1,45 +1,42 @@
-# Multi-stage build optimized for Railway deployment
-# Stage 1: Build the extension
-FROM node:20-slim AS builder
+# Railway-optimized Node.js deployment
+FROM node:20-slim AS base
 
-# Install minimal system dependencies
+# Install essential system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
     git \
-    python3 \
     build-essential \
+    python3 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Copy extension source
-COPY extensions/gide-coding-agent /app/extension
-WORKDIR /app/extension
+WORKDIR /app
 
-# Use npm instead of yarn to avoid certificate issues
-RUN npm config set strict-ssl false \
-    && npm install \
-    && npm run build \
-    && npm config set strict-ssl true \
-    && npx vsce package --no-dependencies --allow-missing-repository --skip-license
+# Copy package files
+COPY package*.json ./
 
-# Stage 2: Runtime with code-server
-FROM codercom/code-server:latest
+# Install dependencies (without the problematic native modules during build)
+RUN npm ci --only=production --ignore-scripts || npm install --only=production --ignore-scripts
 
-# Switch to root to copy files
-USER root
+# Copy application code
+COPY . .
 
-# Copy the built extension and workspace files
-COPY --from=builder --chown=coder:coder /app/extension/gide-coding-agent-*.vsix /home/coder/extensions/
-COPY --chown=coder:coder . /home/coder/workspace/
-COPY --chown=coder:coder start.sh /home/coder/
+# Make scripts executable
+RUN chmod +x scripts/*.js
 
-# Set permissions
-RUN chmod +x /home/coder/start.sh
+# Run Railway build process
+RUN npm run railway:build
 
-# Switch back to coder user
-USER coder
-WORKDIR /home/coder
+# Create non-root user
+RUN useradd -m -u 1000 railway && chown -R railway:railway /app
+USER railway
 
-# Use Railway's PORT variable
-EXPOSE ${PORT:-8080}
+# Expose Railway port
+EXPOSE $PORT
 
-CMD ["/home/coder/start.sh"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:$PORT/healthz || exit 1
+
+# Start application
+CMD ["npm", "run", "railway:start"]
