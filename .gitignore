@@ -28,6 +28,9 @@ product.overrides.json
 
 # GIDE OAuth Environment Variables (contains secrets)
 .env
+
+# Extension VSIX files (built during Docker build)
+*.vsix
 .env.local
 .env.production
 .env.staging
