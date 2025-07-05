@@ -2,8 +2,7 @@
 builder = "dockerfile"
 buildCommand = "npm run railway:build"
 watchPatterns = [
-  "/src/**/*.ts",
-  "/src/**/*.js", 
+  "/scripts/**/*.js",
   "/extensions/**/*.ts",
   "/extensions/**/*.js",
   "/package.json"
