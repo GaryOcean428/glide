@@ -18,7 +18,8 @@ WORKDIR /app/extension
 RUN npm config set strict-ssl false \
     && npm install \
     && npm run build \
-    && npm config set strict-ssl true
+    && npm config set strict-ssl true \
+    && npx vsce package --no-dependencies --allow-missing-repository --skip-license
 
 # Stage 2: Runtime with code-server
 FROM codercom/code-server:latest
@@ -27,7 +28,7 @@ FROM codercom/code-server:latest
 USER root
 
 # Copy the built extension and workspace files
-COPY --from=builder --chown=coder:coder /app/extension /home/coder/workspace/extensions/gide-coding-agent
+COPY --from=builder --chown=coder:coder /app/extension/gide-coding-agent-*.vsix /home/coder/extensions/
 COPY --chown=coder:coder . /home/coder/workspace/
 COPY --chown=coder:coder start.sh /home/coder/
 

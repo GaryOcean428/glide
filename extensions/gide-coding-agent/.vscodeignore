@@ -1,0 +1,21 @@
+# Source code and development files
+src/
+tsconfig.json
+jest.config.json
+yarn.lock
+node_modules/
+.env.example
+ARCHITECTURE.md
+README.md
+
+# Test files
+**/__tests__/
+**/*.test.ts
+**/*.spec.ts
+
+# Build artifacts that shouldn't be packaged
+*.vsix
+*.tgz
+.vscode/
+.git/
+.gitignore
