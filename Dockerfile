@@ -27,8 +27,14 @@ RUN chmod +x scripts/*.js
 # Run Railway build process
 RUN npm run railway:build
 
-# Create non-root user
-RUN useradd -m -u 1000 railway && chown -R railway:railway /app
+# Create non-root user (handle UID 1000 collision)
+RUN if id -u 1000 >/dev/null 2>&1; then \
+      usermod -l railway -d /home/railway -m $(id -un 1000) && \
+      groupmod -n railway $(id -gn 1000); \
+    else \
+      useradd -m -u 1000 railway; \
+    fi && \
+    chown -R railway:railway /app
 USER railway
 
 # Expose Railway port
