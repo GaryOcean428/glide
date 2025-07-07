@@ -1,4 +1,4 @@
-# Railway-optimized Node.js deployment
+# Railway-optimized Node.js deployment with code-server
 FROM node:20-slim AS base
 
 # Set environment variables to optimize build
@@ -10,12 +10,14 @@ ENV ELECTRON_SKIP_BINARY_DOWNLOAD=1 \
     DISABLE_UPDATE_CHECK=true \
     NODE_ENV=production
 
-# Install essential system dependencies
+# Install essential system dependencies and code-server
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
+    wget \
     git \
     build-essential \
     python3 \
+    && curl -fsSL https://code-server.dev/install.sh | sh \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -24,8 +26,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies with Railway optimization - minimal install
-RUN npm install --production --ignore-scripts --no-optional --no-fund --no-audit
+# Install minimal dependencies needed for proxy functionality
+RUN npm install express http-proxy-middleware minimist open --production --no-optional --no-fund --no-audit
 
 # Copy application code
 COPY . .
@@ -33,8 +35,8 @@ COPY . .
 # Make scripts executable
 RUN chmod +x scripts/*.js
 
-# Run Railway build process
-RUN npm run railway:build
+# Create workspace directory
+RUN mkdir -p /tmp/workspace
 
 # Create non-root user with robust UID conflict resolution
 RUN if id -u 1000 >/dev/null 2>&1; then \
@@ -49,7 +51,7 @@ RUN if id -u 1000 >/dev/null 2>&1; then \
     else \
       useradd -m -u 1000 railway; \
     fi && \
-    chown -R railway:railway /app
+    chown -R railway:railway /app /tmp/workspace
 USER railway
 
 # Expose Railway port
