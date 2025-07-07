@@ -1,15 +1,14 @@
 [build]
 builder = "dockerfile"
-buildCommand = "npm run railway:build"
+buildCommand = "echo 'Using pre-built binary strategy'"
 watchPatterns = [
-  "/scripts/**/*.js",
-  "/extensions/**/*.ts",
-  "/extensions/**/*.js",
-  "/package.json"
+  "/scripts/railway-server.js",
+  "/package.json",
+  "/Dockerfile"
 ]
 
 [deploy]
-startCommand = "npm run railway:start"
+startCommand = "node scripts/railway-server.js"
 healthcheckPath = "/healthz"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
@@ -17,5 +16,8 @@ restartPolicyMaxRetries = 3
 
 [env]
 NODE_ENV = "production"
-NIXPACKS_BUILD_CMD = "npm run railway:build"
-NIXPACKS_START_CMD = "npm run railway:start"
+SKIP_NATIVE_MODULES = "1"
+ELECTRON_SKIP_BINARY_DOWNLOAD = "1"
+PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1"
+PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
+NPM_CONFIG_OPTIONAL = "false"

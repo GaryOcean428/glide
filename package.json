@@ -29,9 +29,11 @@
     "build": "npm run compile && npm run build-assets",
     "build-assets": "npm run build-gide-extension",
     "start": "node scripts/railway-server.js",
-    "railway:build": "npm run install-essentials",
-    "railway:start": "npm run start",
+    "railway:build": "echo 'Skipping build for pre-built binary strategy'",
+    "railway:start": "node scripts/railway-server.js",
     "railway:health": "node -e \"const http = require('http'); const port = process.env.PORT || 3000; const req = http.get('http://localhost:' + port + '/healthz', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }); req.on('error', () => process.exit(1));\"",
+    "validate-deployment": "node scripts/validate-deployment.js",
+    "pre-deploy-check": "node scripts/pre-deploy-check.js",
     "watch": "yarn run watch-client && yarn run watch-extensions",
     "watchd": "deemon yarn run watch",
     "watch-webd": "deemon yarn run watch-web",
@@ -98,9 +100,6 @@
     "@vscode/sudo-prompt": "9.3.1",
     "@vscode/tree-sitter-wasm": "^0.1.4",
     "@vscode/vscode-languagedetection": "1.0.21",
-    "@vscode/windows-mutex": "^0.5.0",
-    "@vscode/windows-process-tree": "^0.6.0",
-    "@vscode/windows-registry": "^1.1.0",
     "@xterm/addon-clipboard": "^0.2.0-beta.95",
     "@xterm/addon-image": "^0.9.0-beta.112",
     "@xterm/addon-ligatures": "^0.10.0-beta.112",
@@ -116,12 +115,7 @@
     "http-proxy-agent": "^7.0.0",
     "https-proxy-agent": "^7.0.2",
     "jschardet": "3.1.4",
-    "kerberos": "2.1.1",
     "minimist": "^1.2.8",
-    "native-is-elevated": "0.7.0",
-    "native-keymap": "^3.3.5",
-    "native-watchdog": "^1.4.1",
-    "node-pty": "^1.1.0-beta33",
     "open": "^10.1.2",
     "tas-client-umd": "0.2.0",
     "v8-inspect-profiler": "^0.1.1",
@@ -249,6 +243,14 @@
     "url": "https://github.com/microsoft/vscode/issues"
   },
   "optionalDependencies": {
-    "windows-foreground-love": "0.5.0"
+    "windows-foreground-love": "0.5.0",
+    "native-keymap": "^3.3.5",
+    "native-watchdog": "^1.4.1",
+    "native-is-elevated": "0.7.0",
+    "node-pty": "^1.1.0-beta33",
+    "kerberos": "2.1.1",
+    "@vscode/windows-mutex": "^0.5.0",
+    "@vscode/windows-process-tree": "^0.6.0",
+    "@vscode/windows-registry": "^1.1.0"
   }
 }
