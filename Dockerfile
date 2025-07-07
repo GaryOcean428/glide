@@ -1,23 +1,25 @@
 # Railway-optimized Node.js deployment with code-server
-FROM node:20-slim AS base
+FROM codercom/code-server:latest AS base
 
-# Set environment variables to optimize build
+# Set environment variables to skip native compilation
 ENV ELECTRON_SKIP_BINARY_DOWNLOAD=1 \
     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
     PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     NPM_CONFIG_OPTIONAL=false \
     DISABLE_TELEMETRY=true \
     DISABLE_UPDATE_CHECK=true \
-    NODE_ENV=production
+    NODE_ENV=production \
+    SKIP_NATIVE_MODULES=1
 
-# Install essential system dependencies and code-server
+# Switch to root for installation
+USER root
+
+# Install minimal system dependencies and Node.js
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     wget \
-    git \
-    build-essential \
-    python3 \
-    && curl -fsSL https://code-server.dev/install.sh | sh \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs npm \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -26,33 +28,22 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install minimal dependencies needed for proxy functionality
-RUN npm install express http-proxy-middleware minimist open --production --no-optional --no-fund --no-audit
+# Install only essential dependencies without native modules
+RUN npm install express http-proxy-middleware minimist --production --omit=optional --no-fund --no-audit
 
-# Copy application code
-COPY . .
+# Copy application code (minimal files needed)
+COPY scripts/railway-server.js scripts/
+COPY railway.json railway.toml ./
 
 # Make scripts executable
 RUN chmod +x scripts/*.js
 
 # Create workspace directory
-RUN mkdir -p /tmp/workspace
+RUN mkdir -p /tmp/workspace && \
+    chown -R coder:coder /app /tmp/workspace
 
-# Create non-root user with robust UID conflict resolution
-RUN if id -u 1000 >/dev/null 2>&1; then \
-      echo "UID 1000 already exists, using alternative approach"; \
-      if id -un 1000 | grep -q "node"; then \
-        usermod -l railway -d /home/railway -m node && \
-        groupmod -n railway node; \
-      else \
-        userdel -r $(id -un 1000) 2>/dev/null || true; \
-        useradd -m -u 1000 railway; \
-      fi; \
-    else \
-      useradd -m -u 1000 railway; \
-    fi && \
-    chown -R railway:railway /app /tmp/workspace
-USER railway
+# Switch back to coder user (from code-server image)
+USER coder
 
 # Expose Railway port
 EXPOSE $PORT
@@ -61,5 +52,5 @@ EXPOSE $PORT
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD curl -f http://0.0.0.0:$PORT/healthz || exit 1
 
-# Start application
-CMD ["npm", "run", "railway:start"]
+# Start application using minimal server
+CMD ["node", "scripts/railway-server.js"]
