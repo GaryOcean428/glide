@@ -183,8 +183,7 @@ sw.addEventListener('fetch', (event: FetchEvent) => {
 		return event.respondWith(processLocalhostRequest(event, requestUrl));
 	}
 
-	// For all other requests, pass them through to the network to avoid no-op fetch handler warning
-	event.respondWith(fetch(event.request));
+	// For all other requests, let the browser handle them naturally without service worker interference
 });
 
 sw.addEventListener('install', (event: ExtendableEvent) => {
