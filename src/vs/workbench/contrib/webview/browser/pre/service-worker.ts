@@ -182,6 +182,9 @@ sw.addEventListener('fetch', (event: FetchEvent) => {
 	if (requestUrl.origin !== sw.origin && requestUrl.host.match(/^(localhost|127.0.0.1|0.0.0.0):(\d+)$/)) {
 		return event.respondWith(processLocalhostRequest(event, requestUrl));
 	}
+
+	// For all other requests, pass them through to the network to avoid no-op fetch handler warning
+	event.respondWith(fetch(event.request));
 });
 
 sw.addEventListener('install', (event: ExtendableEvent) => {
