@@ -1,7 +1,4 @@
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
+import { logger } from '../base/common/structuredLogging.js';
 
 import { AppResourcePath, FileAccess, nodeModulesAsarPath, nodeModulesPath, Schemas, VSCODE_AUTHORITY } from './base/common/network.js';
 import * as platform from './base/common/platform.js';
@@ -109,7 +106,7 @@ class AMDModuleImporter {
 
 		const defineCall = await (this._isWebWorker ? this._workerLoadScript(scriptSrc) : this._isRenderer ? this._rendererLoadScript(scriptSrc) : this._nodeJSLoadScript(scriptSrc));
 		if (!defineCall) {
-			console.warn(`Did not receive a define call from script ${scriptSrc}`);
+			logger.warn(`Did not receive a define call from script ${scriptSrc}`, { scriptSrc }, 'AMDLoader');
 			return <T>undefined;
 		}
 		// TODO@esm require, module
