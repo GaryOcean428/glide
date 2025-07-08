@@ -48,7 +48,7 @@ function testDockerfileContents() {
 function testRailwayServer() {
     console.log('\n2. Testing Railway server configuration...');
     
-    const serverPath = path.join('scripts', 'railway-server.js');
+    const serverPath = path.join('scripts', 'railway-server.mjs');
     
     if (fs.existsSync(serverPath)) {
         console.log('   ✅ Railway server script exists');
