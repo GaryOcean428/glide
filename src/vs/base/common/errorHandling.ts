@@ -114,6 +114,20 @@ export class RateLimitError extends ApplicationError {
 /**
  * Log levels for structured logging
  */
+
+/**
+ * Error categories for better error handling
+ */
+export enum ErrorCategory {
+    SYSTEM = 'SYSTEM',
+    NETWORK = 'NETWORK',
+    VALIDATION = 'VALIDATION',
+    AUTHENTICATION = 'AUTHENTICATION',
+    PERMISSION = 'PERMISSION',
+    BUSINESS = 'BUSINESS',
+    UNKNOWN = 'UNKNOWN'
+}
+
 export enum LogLevel {
 	DEBUG = 0,
 	INFO = 1,

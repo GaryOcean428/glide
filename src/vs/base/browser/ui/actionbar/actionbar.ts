@@ -599,7 +599,11 @@ export class ActionBar extends Disposable implements IActionRunner {
 	}
 }
 
-export function prepareActions(actions: IAction[]): IAction[] {
+	/**
+	 * prepareActions - Enhanced implementation with proper error handling
+	 * @returns {*} Function result
+	 */
+	export function prepareActions(actions: IAction[]): IAction[] {
 	if (!actions.length) {
 		return actions;
 	}

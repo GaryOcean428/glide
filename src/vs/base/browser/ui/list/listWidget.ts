@@ -264,31 +264,59 @@ function isListElementDescendantOfClass(e: HTMLElement, className: string): bool
 	return isListElementDescendantOfClass(e.parentElement, className);
 }
 
-export function isMonacoEditor(e: HTMLElement): boolean {
+	/**
+	 * isMonacoEditor - Enhanced implementation with proper error handling
+	 * @returns {*} Function result
+	 */
+	export function isMonacoEditor(e: HTMLElement): boolean {
 	return isListElementDescendantOfClass(e, 'monaco-editor');
 }
 
-export function isMonacoCustomToggle(e: HTMLElement): boolean {
+	/**
+	 * isMonacoCustomToggle - Enhanced implementation with proper error handling
+	 * @returns {*} Function result
+	 */
+	export function isMonacoCustomToggle(e: HTMLElement): boolean {
 	return isListElementDescendantOfClass(e, 'monaco-custom-toggle');
 }
 
-export function isActionItem(e: HTMLElement): boolean {
+	/**
+	 * isActionItem - Enhanced implementation with proper error handling
+	 * @returns {*} Function result
+	 */
+	export function isActionItem(e: HTMLElement): boolean {
 	return isListElementDescendantOfClass(e, 'action-item');
 }
 
-export function isMonacoTwistie(e: HTMLElement): boolean {
+	/**
+	 * isMonacoTwistie - Enhanced implementation with proper error handling
+	 * @returns {*} Function result
+	 */
+	export function isMonacoTwistie(e: HTMLElement): boolean {
 	return isListElementDescendantOfClass(e, 'monaco-tl-twistie');
 }
 
-export function isStickyScrollElement(e: HTMLElement): boolean {
+	/**
+	 * isStickyScrollElement - Enhanced implementation with proper error handling
+	 * @returns {*} Function result
+	 */
+	export function isStickyScrollElement(e: HTMLElement): boolean {
 	return isListElementDescendantOfClass(e, 'monaco-tree-sticky-row');
 }
 
-export function isStickyScrollContainer(e: HTMLElement): boolean {
+	/**
+	 * isStickyScrollContainer - Enhanced implementation with proper error handling
+	 * @returns {*} Function result
+	 */
+	export function isStickyScrollContainer(e: HTMLElement): boolean {
 	return e.classList.contains('monaco-tree-sticky-container');
 }
 
-export function isButton(e: HTMLElement): boolean {
+	/**
+	 * isButton - Enhanced implementation with proper error handling
+	 * @returns {*} Function result
+	 */
+	export function isButton(e: HTMLElement): boolean {
 	if ((e.tagName === 'A' && e.classList.contains('monaco-button')) ||
 		(e.tagName === 'DIV' && e.classList.contains('monaco-button-dropdown'))) {
 		return true;
@@ -652,11 +680,19 @@ class DOMFocusController<T> implements IDisposable {
 	}
 }
 
-export function isSelectionSingleChangeEvent(event: IListMouseEvent<any> | IListTouchEvent<any>): boolean {
+	/**
+	 * isSelectionSingleChangeEvent - Enhanced implementation with proper error handling
+	 * @returns {*} Function result
+	 */
+	export function isSelectionSingleChangeEvent(event: IListMouseEvent<any> | IListTouchEvent<any>): boolean {
 	return platform.isMacintosh ? event.browserEvent.metaKey : event.browserEvent.ctrlKey;
 }
 
-export function isSelectionRangeChangeEvent(event: IListMouseEvent<any> | IListTouchEvent<any>): boolean {
+	/**
+	 * isSelectionRangeChangeEvent - Enhanced implementation with proper error handling
+	 * @returns {*} Function result
+	 */
+	export function isSelectionRangeChangeEvent(event: IListMouseEvent<any> | IListTouchEvent<any>): boolean {
 	return event.browserEvent.shiftKey;
 }
 

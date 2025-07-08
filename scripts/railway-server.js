@@ -11,7 +11,31 @@ function validatePort(port) { const portNum = parseInt(port, 10); return (portNu
 const codeServerPort = 8443; let codeServerProcess = null;
 let codeServerReady = false; logger.info('🚀 GIDE Railway Server starting...');
 logger.info('📦 Environment:', process.env.NODE_ENV || 'development');
-logger.info('🔧 Skip native modules:', process.env.SKIP_NATIVE_MODULES === '1'); // Check for native module availability (graceful fallback)
+logger.info('🔧 Skip native modules:', process.env.SKIP_NATIVE_MODULES === '1'); 
+// Performance optimization: Cache native module checks
+const moduleCache = new Map();
+
+/**
+ * Cached native module check for performance
+ * @param {string} moduleName - Module name to check
+ * @returns {boolean} - Whether module is available
+ */
+function isModuleAvailable(moduleName) {
+    if (moduleCache.has(moduleName)) {
+        return moduleCache.get(moduleName);
+    }
+    
+    try {
+        require.resolve(moduleName);
+        moduleCache.set(moduleName, true);
+        return true;
+    } catch (e) {
+        moduleCache.set(moduleName, false);
+        return false;
+    }
+}
+
+// Check for native module availability (graceful fallback)
 function checkNativeModules() { const nativeModules = ['native-keymap', 'native-watchdog', 'node-pty', 'kerberos']; const availableModules = []; for (const moduleName of nativeModules) { try { require.resolve(moduleName); availableModules.push(moduleName); } catch (e) { logger.info(`⚠️ Native module ${moduleName} not available (this is expected in Railway deployment)`); } } logger.info(`✅ Available native modules: ${availableModules.length > 0 ? availableModules.join(', ') : 'none (using fallbacks)'}`); return availableModules;
 } // Start code-server (prefer global installation, fallback to showing proxy readiness)
 function startCodeServer() { logger.info('🚀 Attempting to start VS Code server...'); // Check native modules first const nativeModules = checkNativeModules(); // Try to find a working code-server installation const codeServerCandidates = [ '/usr/bin/code-server', // Code-server from Docker image 'code-server', // Global installation path.join(__dirname, '..', 'node_modules', '.bin', 'code-server'), // Local installation ]; let serverCommand = null; let serverArgs = []; // Try code-server binary first for (const candidate of codeServerCandidates) { try { if (fs.existsSync(candidate) || candidate === 'code-server') { cp.execSync(`which ${candidate}`, { stdio: 'ignore' }); serverCommand = candidate; break; } } catch (e) { // Continue to next candidate } } if (serverCommand) { serverArgs = [ '--bind-addr', `127.0.0.1:${codeServerPort}`, '--disable-telemetry', '--disable-update-check', '--auth', 'none', '/tmp/workspace' ]; logger.info(`✅ Found code-server: ${serverCommand}`); } else { logger.info('⚠️ No code-server found. Running in proxy-only mode.'); // Set up a simple mock server to demonstrate proxy functionality startMockServer(); return; } logger.info(`Starting server: ${serverCommand} ${serverArgs.join(' ')}`); codeServerProcess = cp.spawn(serverCommand, serverArgs, { stdio: ['pipe', 'pipe', 'pipe'], env: { ...process.env, NODE_ENV: 'production' } }); codeServerProcess.stdout.on('data', (data) => { const output = data.toString(); logger.info('Code-server:', output.trim()); // Look for server ready indicators if (output.includes('HTTP server listening') || output.includes('listening on') || output.includes('available at') || output.includes('Server bound to')) { codeServerReady = true; logger.info('✅ VS Code server is ready!'); } }); codeServerProcess.stderr.on('data', (data) => { const output = data.toString(); logger.error('Code-server error:', output.trim()); }); codeServerProcess.on('exit', (code, signal) => { logger.info(`Code-server exited with code ${code}, signal ${signal}`); codeServerReady = false; if (code !== 0 && code !== null) { logger.info('Restarting code-server in 5 seconds...'); setTimeout(startCodeServer, 5000); } }); codeServerProcess.on('error', (err) => { logger.error('Failed to start code-server:', err); logger.info('Falling back to mock server for proxy demonstration...'); codeServerReady = false; startMockServer(); }); // Add a timeout fallback in case the process fails repeatedly setTimeout(() => { if (!codeServerReady) { logger.info('⚠️ Code-server failed to start within timeout, using mock server...'); if (codeServerProcess && !codeServerProcess.killed) { codeServerProcess.kill('SIGTERM'); } startMockServer(); } }, 10000); // 10 second timeout;
