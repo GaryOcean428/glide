@@ -22,12 +22,16 @@ export class ApplicationError extends Error {
 		context?: any
 	) {
 		super(message);
-		this.name = this.constructor.name;
+		this.name = this.constructor.name || 'ApplicationError';
 		this.timestamp = new Date();
 		this.context = context;
 		
 		// Ensure proper prototype chain
-		Object.setPrototypeOf(this, ApplicationError.prototype);
+		if (Object.setPrototypeOf) {
+			Object.setPrototypeOf(this, ApplicationError.prototype);
+		} else {
+			(this as any).__proto__ = ApplicationError.prototype;
+		}
 		
 		// Capture stack trace if available
 		if (Error.captureStackTrace) {

@@ -25,6 +25,9 @@ import { localize } from '../../../../nls.js';
 import type { IManagedHover } from '../hover/hover.js';
 import { getBaseLayerHoverDelegate } from '../hover/hoverDelegate2.js';
 import { IActionProvider } from '../dropdown/dropdown.js';
+import { SecurityIntegration } from '../../../common/securityIntegration.js';
+import { PerformanceIntegration } from '../../../common/performanceIntegration.js';
+import { logger } from '../../../common/structuredLogging.js';
 
 export interface IButtonOptions extends Partial<IButtonStyles> {
 	readonly title?: boolean | string;
@@ -237,18 +240,48 @@ export class Button extends Disposable implements IButton {
 		const labelElement = this.options.supportShortLabel ? this._labelElement! : this._element;
 
 		if (isMarkdownString(value)) {
-			const rendered = renderMarkdown(value, { inline: true });
-			rendered.dispose();
+			// Monitor markdown rendering performance
+			const performanceIntegration = PerformanceIntegration.getInstance();
+			
+			performanceIntegration.monitorDOMRender('button-markdown-render', labelElement, () => {
+				const rendered = renderMarkdown(value, { inline: true });
+				rendered.dispose();
 
-			// Don't include outer `<p>`
-			const root = rendered.element.querySelector('p')?.innerHTML;
-			if (root) {
-				// Only allow a very limited set of inline html tags
-				const sanitized = dompurify.sanitize(root, { ADD_TAGS: ['b', 'i', 'u', 'code', 'span'], ALLOWED_ATTR: ['class'], RETURN_TRUSTED_TYPE: true });
-				labelElement.innerHTML = sanitized as unknown as string;
-			} else {
-				reset(labelElement);
-			}
+				// Don't include outer `<p>`
+				const root = rendered.element.querySelector('p')?.innerHTML;
+				if (root) {
+					// Enhanced security: Use SecurityIntegration for additional validation
+					try {
+						// First validate the content for security
+						const isSecure = SecurityIntegration.validateSecureFilePath(root) && 
+							!root.includes('javascript:') && 
+							!root.includes('data:');
+						
+						if (!isSecure) {
+							logger.warn('Potentially unsafe content detected in button markdown', {
+								content: root.substring(0, 100),
+								button: this._element.id || 'unknown'
+							});
+						}
+						
+						// Only allow a very limited set of inline html tags with enhanced sanitization
+						const sanitized = dompurify.sanitize(root, { 
+							ADD_TAGS: ['b', 'i', 'u', 'code', 'span'], 
+							ALLOWED_ATTR: ['class'], 
+							RETURN_TRUSTED_TYPE: true 
+						});
+						
+						// Use SecurityIntegration for secure innerHTML setting
+						SecurityIntegration.setInnerHtml(labelElement, sanitized as string, true);
+					} catch (error) {
+						logger.error('Error during secure button content rendering', { error, content: root });
+						// Fallback to plain text
+						labelElement.textContent = value.value || '';
+					}
+				} else {
+					reset(labelElement);
+				}
+			});
 		} else {
 			if (this.options.supportIcons) {
 				reset(labelElement, ...this.getContentElements(value));

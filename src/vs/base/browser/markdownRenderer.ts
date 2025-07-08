@@ -25,6 +25,9 @@ import { createElement, FormattedTextRenderOptions } from './formattedTextRender
 import { StandardKeyboardEvent } from './keyboardEvent.js';
 import { StandardMouseEvent } from './mouseEvent.js';
 import { renderLabelWithIcons } from './ui/iconLabel/iconLabels.js';
+import { SecurityIntegration } from '../common/securityIntegration.js';
+import { PerformanceIntegration } from '../common/performanceIntegration.js';
+import { logger } from '../common/structuredLogging.js';
 
 export interface MarkedOptions extends Readonly<Omit<marked.MarkedOptions, 'extensions' | 'baseUrl'>> {
 	readonly markedExtensions?: marked.MarkedExtension[];
@@ -136,7 +139,34 @@ export function renderMarkdown(markdown: IMarkdownString, options: MarkdownRende
 
 	rewriteRenderedLinks(markdown, options, markdownHtmlDoc.body);
 
-	element.innerHTML = sanitizeRenderedMarkdown({ isTrusted: markdown.isTrusted, ...options.sanitizerOptions }, markdownHtmlDoc.body.innerHTML) as unknown as string;
+	// Enhanced security: Use SecurityIntegration for safe innerHTML assignment
+	const performanceIntegration = PerformanceIntegration.getInstance();
+	performanceIntegration.monitorDOMRender('markdown-render', element, () => {
+		try {
+			const sanitizedContent = sanitizeRenderedMarkdown({ isTrusted: markdown.isTrusted, ...options.sanitizerOptions }, markdownHtmlDoc.body.innerHTML) as unknown as string;
+			
+			// Additional security validation for untrusted content
+			if (!markdown.isTrusted) {
+				const isSecure = SecurityIntegration.validateAndSanitizeUrl(sanitizedContent) !== null || 
+					!sanitizedContent.includes('javascript:') && 
+					!sanitizedContent.includes('data:');
+				
+				if (!isSecure) {
+					logger.warn('Potentially unsafe content detected in markdown rendering', {
+						content: sanitizedContent.substring(0, 200),
+						isTrusted: markdown.isTrusted
+					});
+				}
+			}
+			
+			// Use SecurityIntegration for secure innerHTML setting
+			SecurityIntegration.setInnerHtml(element, sanitizedContent, true);
+		} catch (error) {
+			logger.error('Error during secure markdown rendering', { error, content: markdownHtmlDoc.body.innerHTML });
+			// Fallback to plain text
+			element.textContent = markdown.value || '';
+		}
+	});
 
 	if (codeBlocks.length > 0) {
 		Promise.all(codeBlocks).then((tuples) => {
