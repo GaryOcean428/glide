@@ -600,7 +600,7 @@ class RemoteExtensionHostAgentServer extends Disposable implements IServerAPI {
 
 		const hasActiveExtHosts = !!Object.keys(this._extHostConnections).length;
 		if (!hasActiveExtHosts) {
-			console.log('Last EH closed, waiting before shutting down');
+			logger.info('Last EH closed, waiting before shutting down');
 			this._logService.info('Last EH closed, waiting before shutting down');
 			this._waitThenShutdown();
 		}
@@ -625,11 +625,11 @@ class RemoteExtensionHostAgentServer extends Disposable implements IServerAPI {
 	private _shutdown(): void {
 		const hasActiveExtHosts = !!Object.keys(this._extHostConnections).length;
 		if (hasActiveExtHosts) {
-			console.log('New EH opened, aborting shutdown');
+			logger.info('New EH opened, aborting shutdown');
 			this._logService.info('New EH opened, aborting shutdown');
 			return;
 		} else {
-			console.log('Last EH closed, shutting down');
+			logger.info('Last EH closed, shutting down');
 			this._logService.info('Last EH closed, shutting down');
 			this.dispose();
 			process.exit(0);
@@ -641,7 +641,7 @@ class RemoteExtensionHostAgentServer extends Disposable implements IServerAPI {
 	 */
 	private _delayShutdown(): void {
 		if (this.shutdownTimer) {
-			console.log('Got delay-shutdown request while in shutdown timeout, delaying');
+			logger.info('Got delay-shutdown request while in shutdown timeout, delaying');
 			this._logService.info('Got delay-shutdown request while in shutdown timeout, delaying');
 			this._cancelShutdown();
 			this._waitThenShutdown();
@@ -650,7 +650,7 @@ class RemoteExtensionHostAgentServer extends Disposable implements IServerAPI {
 
 	private _cancelShutdown(): void {
 		if (this.shutdownTimer) {
-			console.log('Cancelling previous shutdown timeout');
+			logger.info('Cancelling previous shutdown timeout');
 			this._logService.info('Cancelling previous shutdown timeout');
 			clearTimeout(this.shutdownTimer);
 			this.shutdownTimer = undefined;
@@ -681,7 +681,7 @@ export async function createServer(address: string | net.AddressInfo | null, arg
 
 	const connectionToken = await determineServerConnectionToken(args);
 	if (connectionToken instanceof ServerConnectionTokenParseError) {
-		console.warn(connectionToken.message);
+		logger.warn(connectionToken.message);
 		process.exit(1);
 	}
 
@@ -703,7 +703,7 @@ export async function createServer(address: string | net.AddressInfo | null, arg
 	const unloggedErrors: any[] = [];
 	initUnexpectedErrorHandler((error: any) => {
 		unloggedErrors.push(error);
-		console.error(error);
+		logger.error(error);
 	});
 	let didLogAboutSIGPIPE = false;
 	process.on('SIGPIPE', () => {
@@ -769,7 +769,7 @@ export async function createServer(address: string | net.AddressInfo | null, arg
 
 `;
 				logService.warn(message);
-				console.warn(message);
+				logger.warn(message);
 				process.exit(0);
 			}
 		}
@@ -798,7 +798,7 @@ export async function createServer(address: string | net.AddressInfo | null, arg
 	if (hasWebClient && address && typeof address !== 'string') {
 		// ships the web ui!
 		const queryPart = (connectionToken.type !== ServerConnectionTokenType.None ? `?${connectionTokenQueryName}=${connectionToken.value}` : '');
-		console.log(`Web UI available at http://localhost${address.port === 80 ? '' : `:${address.port}`}${serverBasePath ?? ''}${queryPart}`);
+		logger.info(`Web UI available at http://localhost${address.port === 80 ? '' : `:${address.port}`}${serverBasePath ?? ''}${queryPart}`);
 	}
 
 	const remoteExtensionHostAgentServer = instantiationService.createInstance(RemoteExtensionHostAgentServer, socketServer, connectionToken, vsdaMod, hasWebClient, serverBasePath);
@@ -864,7 +864,7 @@ export async function createServer(address: string | net.AddressInfo | null, arg
 		output += `Code loading time: ${vscodeServerCodeLoadedTime - vscodeServerStartTime}\n`;
 		output += `Initialized time: ${currentTime - vscodeServerStartTime}\n`;
 		output += `\n`;
-		console.log(output);
+		logger.info(output);
 	}
 	return remoteExtensionHostAgentServer;
 }

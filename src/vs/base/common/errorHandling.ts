@@ -114,6 +114,20 @@ export class RateLimitError extends ApplicationError {
 /**
  * Log levels for structured logging
  */
+
+/**
+ * Error categories for better error handling
+ */
+export enum ErrorCategory {
+    SYSTEM = 'SYSTEM',
+    NETWORK = 'NETWORK',
+    VALIDATION = 'VALIDATION',
+    AUTHENTICATION = 'AUTHENTICATION',
+    PERMISSION = 'PERMISSION',
+    BUSINESS = 'BUSINESS',
+    UNKNOWN = 'UNKNOWN'
+}
+
 export enum LogLevel {
 	DEBUG = 0,
 	INFO = 1,
@@ -231,31 +245,44 @@ export class Logger implements ILogger {
 
 	public debug(message: string, meta?: any): void {
 		if (this.shouldLog(LogLevel.DEBUG)) {
-			console.debug(this.formatMessage(LogLevel.DEBUG, message, meta));
+			this.output(this.formatMessage(LogLevel.DEBUG, message, meta));
 		}
 	}
 
 	public info(message: string, meta?: any): void {
 		if (this.shouldLog(LogLevel.INFO)) {
-			console.info(this.formatMessage(LogLevel.INFO, message, meta));
+			this.output(this.formatMessage(LogLevel.INFO, message, meta));
 		}
 	}
 
 	public warn(message: string, meta?: any): void {
 		if (this.shouldLog(LogLevel.WARN)) {
-			console.warn(this.formatMessage(LogLevel.WARN, message, meta));
+			this.output(this.formatMessage(LogLevel.WARN, message, meta));
 		}
 	}
 
 	public error(message: string, error?: Error, meta?: any): void {
 		if (this.shouldLog(LogLevel.ERROR)) {
-			console.error(this.formatMessage(LogLevel.ERROR, message, meta, error));
+			this.output(this.formatMessage(LogLevel.ERROR, message, meta, error));
 		}
 	}
 
 	public fatal(message: string, error?: Error, meta?: any): void {
 		if (this.shouldLog(LogLevel.FATAL)) {
-			console.error(this.formatMessage(LogLevel.FATAL, message, meta, error));
+			this.output(this.formatMessage(LogLevel.FATAL, message, meta, error));
+		}
+	}
+
+	/**
+	 * Output method that can be overridden for different environments
+	 * @param message - Formatted log message
+	 */
+	private output(message: string): void {
+		if (typeof process !== 'undefined' && process.stderr) {
+			process.stderr.write(message + '\n');
+		} else {
+			// Fallback for browser environments
+			console.log(message);
 		}
 	}
 }
