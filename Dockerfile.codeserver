@@ -1,4 +1,4 @@
-# Railway-optimized Node.js deployment with minimal dependencies
+# Railway-optimized Node.js deployment with code-server preinstalled
 # Use official Node.js image to avoid NodeSource installation issues
 FROM node:20-bookworm-slim
 
@@ -21,7 +21,7 @@ RUN echo 'Acquire::http::Timeout "30";' > /etc/apt/apt.conf.d/99timeout && \
     echo 'Dpkg::Options "--force-confdef";' >> /etc/apt/apt.conf.d/99timeout && \
     echo 'Dpkg::Options "--force-confold";' >> /etc/apt/apt.conf.d/99timeout
 
-# Install system dependencies needed for native builds
+# Install system dependencies needed for native builds AND code-server
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
     --no-install-recommends \
@@ -31,6 +31,9 @@ RUN apt-get update && \
     g++ \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Install code-server (pre-built VSCode server)
+RUN curl -fsSL https://code-server.dev/install.sh | sh
 
 WORKDIR /app
 
