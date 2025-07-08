@@ -50,9 +50,26 @@ COPY railway.json railway.toml ./
 # Make scripts executable
 RUN chmod +x scripts/*.js
 
-# Create workspace directory and setup user
+# Create workspace directory and setup user with UID conflict resolution
 RUN mkdir -p /tmp/workspace && \
-    useradd -m -u 1000 -g users -s /bin/bash railway && \
+    # Ensure users group exists
+    groupadd -f users && \
+    # Check if UID 1000 already exists and handle conflicts
+    if id -u 1000 >/dev/null 2>&1; then \
+        existing_user=$(id -nu 1000); \
+        if [ "$existing_user" = "node" ]; then \
+            # Rename the existing node user to railway and set proper group
+            usermod -l railway -d /home/railway -m -g users node; \
+        else \
+            # Remove the existing user and create railway user
+            userdel -r "$existing_user" 2>/dev/null || true; \
+            useradd -m -u 1000 -g users -s /bin/bash railway; \
+        fi; \
+    else \
+        # No conflict, create railway user normally
+        useradd -m -u 1000 -g users -s /bin/bash railway; \
+    fi && \
+    # Ensure proper ownership
     chown -R railway:users /app /tmp/workspace
 
 # Switch to railway user
