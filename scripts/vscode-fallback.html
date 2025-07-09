@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Studio Code</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1e1e1e;
+            color: #cccccc;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .title-bar {
+            background: #323233;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            border-bottom: 1px solid #2d2d30;
+        }
+
+        .title-bar .title {
+            flex: 1;
+            text-align: center;
+            font-size: 12px;
+            color: #cccccc;
+        }
+
+        .menu-bar {
+            background: #2d2d30;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            border-bottom: 1px solid #252526;
+            font-size: 13px;
+        }
+
+        .menu-item {
+            padding: 8px 12px;
+            margin: 0 2px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.1s;
+        }
+
+        .menu-item:hover {
+            background: #37373d;
+        }
+
+        .workbench {
+            display: flex;
+            height: calc(100vh - 65px);
+        }
+
+        .sidebar {
+            width: 250px;
+            background: #252526;
+            border-right: 1px solid #2d2d30;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 8px 16px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #cccccc;
+            background: #2d2d30;
+            border-bottom: 1px solid #37373d;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            padding: 8px;
+        }
+
+        .main-editor {
+            flex: 1;
+            background: #1e1e1e;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .welcome-message {
+            text-align: center;
+            max-width: 600px;
+            padding: 40px 20px;
+        }
+
+        .welcome-message h1 {
+            color: #007acc;
+            font-size: 28px;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+
+        .welcome-message p {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #cccccc;
+            margin-bottom: 15px;
+        }
+
+        .error-details {
+            background: #5a1d1d;
+            border: 1px solid #be1100;
+            border-radius: 4px;
+            padding: 16px;
+            margin: 20px 0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            text-align: left;
+        }
+
+        .error-title {
+            color: #f48771;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .retry-button {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 13px;
+            margin: 10px 5px;
+            transition: background-color 0.1s;
+        }
+
+        .retry-button:hover {
+            background: #007acc;
+        }
+
+        .status-bar {
+            height: 22px;
+            background: #007acc;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            font-size: 12px;
+            color: white;
+            justify-content: space-between;
+        }
+
+        .status-left, .status-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .icon {
+            width: 16px;
+            height: 16px;
+            display: inline-block;
+            margin-right: 4px;
+        }
+
+        .loading {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .spinner {
+            border: 2px solid #37373d;
+            border-top: 2px solid #007acc;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="title-bar">
+        <div class="title">Visual Studio Code - GIDE</div>
+    </div>
+
+    <div class="menu-bar">
+        <div class="menu-item">File</div>
+        <div class="menu-item">Edit</div>
+        <div class="menu-item">Selection</div>
+        <div class="menu-item">View</div>
+        <div class="menu-item">Go</div>
+        <div class="menu-item">Run</div>
+        <div class="menu-item">Terminal</div>
+        <div class="menu-item">Help</div>
+    </div>
+
+    <div class="workbench">
+        <div class="sidebar">
+            <div class="sidebar-header">Explorer</div>
+            <div class="sidebar-content">
+                <div style="color: #888; font-size: 12px; padding: 8px 0;">
+                    <div class="loading">📁 Workspace loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-editor">
+            <div class="welcome-message">
+                <h1>🚧 VS Code Environment Setup</h1>
+                <p>The VS Code web interface is currently being prepared for deployment.</p>
+                
+                <div class="error-details">
+                    <div class="error-title">⚠️ Build Dependencies Required</div>
+                    <div>The VS Code web server requires additional build dependencies that are not available in this environment.</div>
+                    <div style="margin-top: 8px; color: #cccccc;">
+                        • Missing build tools and development dependencies<br>
+                        • Railway deployment environment limitations<br>
+                        • Native module compilation issues
+                    </div>
+                </div>
+
+                <p>This interface demonstrates the VS Code layout while the full environment is being prepared.</p>
+                
+                <button class="retry-button" onclick="window.location.reload()">
+                    <div class="spinner"></div>
+                    Retry Loading
+                </button>
+                
+                <button class="retry-button" onclick="window.open('/healthz', '_blank')">
+                    Check System Status
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <div class="status-left">
+            <span>🔧 Environment: Railway Deployment</span>
+            <span>📦 GIDE v1.102.0</span>
+        </div>
+        <div class="status-right">
+            <span>⚡ Node.js</span>
+            <span id="timestamp"></span>
+        </div>
+    </div>
+
+    <script>
+        // Update timestamp
+        function updateTimestamp() {
+            document.getElementById('timestamp').textContent = new Date().toLocaleTimeString();
+        }
+        updateTimestamp();
+        setInterval(updateTimestamp, 1000);
+
+        // Auto-refresh every 30 seconds to check if VS Code is available
+        setTimeout(() => {
+            window.location.reload();
+        }, 30000);
+    </script>
+</body>
+</html>

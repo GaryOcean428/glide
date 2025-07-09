@@ -83,59 +83,40 @@ function checkNativeModules() {
     return availableModules;
 }
 
-// Start code-server (prefer global installation, fallback to showing proxy readiness)
+// Start VS Code web server using the built-in test-web package
 function startCodeServer() {
-    logger.info('🚀 Attempting to start VS Code server...');
-    
-    // Check native modules first
-    const nativeModules = checkNativeModules();
+    logger.info('🚀 Starting VS Code web server...');
     
     // Get current directory from import.meta.url
     const __filename = url.fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
+    const appRoot = path.join(__dirname, '..');
     
-    // Try to find a working code-server installation
-    const codeServerCandidates = [
-        '/usr/bin/code-server', // Code-server from Docker image
-        'code-server', // Global installation
-        path.join(__dirname, '..', 'node_modules', '.bin', 'code-server'), // Local installation
-    ];
-    
-    let serverCommand = null;
-    let serverArgs = [];
-    
-    // Try code-server binary first
-    for (const candidate of codeServerCandidates) {
-        try {
-            if (fs.existsSync(candidate) || candidate === 'code-server') {
-                cp.execSync(`which ${candidate}`, { stdio: 'ignore' });
-                serverCommand = candidate;
-                break;
-            }
-        } catch (e) {
-            // Continue to next candidate
+    // Try to use VS Code's built-in web server
+    let testWebLocation;
+    try {
+        // Try to resolve @vscode/test-web package
+        testWebLocation = path.join(appRoot, 'node_modules', '@vscode', 'test-web', 'out', 'server', 'index.js');
+        if (!fs.existsSync(testWebLocation)) {
+            throw new Error('Package not found');
         }
-    }
-    
-    if (serverCommand) {
-        serverArgs = [
-            '--bind-addr', `127.0.0.1:${codeServerPort}`,
-            '--disable-telemetry',
-            '--disable-update-check',
-            '--auth', 'none',
-            '/tmp/workspace'
-        ];
-        logger.info(`✅ Found code-server: ${serverCommand}`);
-    } else {
-        logger.info('⚠️ No code-server found. Running in proxy-only mode.');
-        // Set up a simple mock server to demonstrate proxy functionality
+    } catch (e) {
+        logger.error('❌ Cannot find @vscode/test-web package');
+        logger.info('🎭 Starting fallback server...');
         startMockServer();
         return;
     }
     
-    logger.info(`Starting server: ${serverCommand} ${serverArgs.join(' ')}`);
+    const serverArgs = [
+        '--host', '127.0.0.1',
+        '--port', codeServerPort.toString(),
+        '--browserType', 'none',
+        '--sourcesPath', appRoot
+    ];
     
-    codeServerProcess = cp.spawn(serverCommand, serverArgs, {
+    logger.info(`Starting VS Code web server: ${testWebLocation} ${serverArgs.join(' ')}`);
+    
+    codeServerProcess = cp.spawn(process.execPath, [testWebLocation, ...serverArgs], {
         stdio: ['pipe', 'pipe', 'pipe'],
         env: {
             ...process.env,
@@ -145,36 +126,35 @@ function startCodeServer() {
     
     codeServerProcess.stdout.on('data', (data) => {
         const output = data.toString();
-        logger.info('Code-server:', output.trim());
+        logger.info('VS Code web:', output.trim());
         
         // Look for server ready indicators
-        if (output.includes('HTTP server listening') || 
-            output.includes('listening on') || 
-            output.includes('available at') || 
-            output.includes('Server bound to')) {
+        if (output.includes('Listening on') || 
+            output.includes('Web UI available') || 
+            output.includes('Server listening')) {
             codeServerReady = true;
-            logger.info('✅ VS Code server is ready!');
+            logger.info('✅ VS Code web server is ready!');
         }
     });
     
     codeServerProcess.stderr.on('data', (data) => {
         const output = data.toString();
-        logger.error('Code-server error:', output.trim());
+        logger.error('VS Code web error:', output.trim());
     });
     
     codeServerProcess.on('exit', (code, signal) => {
-        logger.info(`Code-server exited with code ${code}, signal ${signal}`);
+        logger.info(`VS Code web server exited with code ${code}, signal ${signal}`);
         codeServerReady = false;
         
         if (code !== 0 && code !== null) {
-            logger.info('Restarting code-server in 5 seconds...');
+            logger.info('Restarting VS Code web server in 5 seconds...');
             setTimeout(startCodeServer, 5000);
         }
     });
     
     codeServerProcess.on('error', (err) => {
-        logger.error('Failed to start code-server:', err);
-        logger.info('Falling back to mock server for proxy demonstration...');
+        logger.error('Failed to start VS Code web server:', err);
+        logger.info('🎭 Falling back to mock server...');
         codeServerReady = false;
         startMockServer();
     });
@@ -182,92 +162,88 @@ function startCodeServer() {
     // Add a timeout fallback in case the process fails repeatedly
     setTimeout(() => {
         if (!codeServerReady) {
-            logger.info('⚠️ Code-server failed to start within timeout, using mock server...');
+            logger.info('⚠️ VS Code web server failed to start within timeout, checking again...');
             if (codeServerProcess && !codeServerProcess.killed) {
-                codeServerProcess.kill('SIGTERM');
+                // Give it a bit more time before killing
+                setTimeout(() => {
+                    if (!codeServerReady) {
+                        logger.info('🛑 Stopping VS Code web server and using fallback...');
+                        codeServerProcess.kill('SIGTERM');
+                        setTimeout(startMockServer, 1000); // Wait 1 second before starting mock server
+                    }
+                }, 5000);
+            } else {
+                startMockServer();
             }
-            startMockServer();
         }
-    }, 10000); // 10 second timeout
+    }, 30000); // 30 second timeout for first start
 }
 
-// Start a simple mock server to demonstrate proxy functionality
+// Start a fallback server when VS Code web server is not available
 function startMockServer() {
-    logger.info('🎭 Starting mock VS Code server for demonstration...');
+    logger.info('🎭 Starting VS Code-like fallback interface...');
     
     const mockServer = http.createServer((req, res) => {
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end(`
+        if (req.url === '/healthz' || req.url === '/health') {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                status: 'fallback',
+                message: 'VS Code web server unavailable - serving fallback interface',
+                timestamp: new Date().toISOString(),
+                port: port,
+                codeServerPort: codeServerPort,
+                codeServerReady: false,
+                env: process.env.NODE_ENV || 'development'
+            }));
+            return;
+        }
+        
+        // Serve the VS Code-like fallback interface
+        const __filename = url.fileURLToPath(import.meta.url);
+        const __dirname = path.dirname(__filename);
+        const fallbackPath = path.join(__dirname, 'vscode-fallback.html');
+        
+        try {
+            const fallbackContent = fs.readFileSync(fallbackPath, 'utf8');
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end(fallbackContent);
+        } catch (error) {
+            logger.error('Failed to serve fallback interface:', error);
+            res.writeHead(503, { 'Content-Type': 'text/html' });
+            res.end(`
 <!DOCTYPE html>
 <html>
 <head>
-    <title>GIDE - VS Code Server</title>
+    <title>GIDE - VS Code Server Unavailable</title>
+    <meta http-equiv="refresh" content="10">
     <style>
         body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
             margin: 40px; 
             background: #1e1e1e; 
             color: #d4d4d4; 
+            text-align: center;
         }
-        .container { max-width: 800px; margin: 0 auto; }
-        .header { background: #007acc; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        .status { background: #0e639c; padding: 15px; border-radius: 5px; margin: 10px 0; }
-        .info { background: #333; padding: 15px; border-radius: 5px; margin: 10px 0; }
-        .success { background: #0e7211; padding: 15px; border-radius: 5px; margin: 10px 0; }
-        a { color: #007acc; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-        .code { background: #2d2d30; padding: 10px; border-radius: 4px; font-family: monospace; }
+        .error { background: #d73027; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .spinner { animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🚀 GIDE - VS Code Server</h1>
-            <p>Railway Deployment with Pre-built Binary Strategy</p>
-        </div>
-        
-        <div class="success">
-            <h2>✅ Deployment Successful!</h2>
-            <p>The Railway deployment is working correctly with the lightweight pre-built binary strategy.</p>
-            <p>Native module compilation has been bypassed successfully.</p>
-        </div>
-        
-        <div class="status">
-            <h2>🔧 System Status</h2>
-            <p><strong>Request:</strong> ${req.method} ${req.url}</p>
-            <p><strong>Timestamp:</strong> ${new Date().toISOString()}</p>
-            <p><strong>Proxy Port:</strong> ${port}</p>
-            <p><strong>Target Port:</strong> ${codeServerPort}</p>
-            <p><strong>Environment:</strong> ${process.env.NODE_ENV || 'development'}</p>
-        </div>
-        
-        <div class="info">
-            <h3>✨ Features</h3>
-            <ul>
-                <li>✅ Pre-built binary strategy (no native compilation)</li>
-                <li>✅ Lightweight Docker container</li>
-                <li>✅ Health check endpoint</li>
-                <li>✅ Graceful fallback for missing native modules</li>
-                <li>✅ WebSocket proxy support</li>
-            </ul>
-        </div>
-        
-        <div class="info">
-            <h3>🔗 Endpoints</h3>
-            <div class="code">
-                <p><a href="/healthz">GET /healthz</a> - Health check</p>
-                <p><a href="/health">GET /health</a> - Health check (alias)</p>
-                <p>GET /* - Proxy to VS Code server</p>
-            </div>
-        </div>
+    <div class="error">
+        <h1>🚧 VS Code Server Unavailable</h1>
+        <p><span class="spinner">🔄</span> The VS Code web interface could not be started.</p>
+        <p>Environment: ${process.env.NODE_ENV || 'development'}</p>
+        <p><a href="/healthz">Health Check</a> | <a href="/">Retry</a></p>
     </div>
 </body>
 </html>
-        `);
+            `);
+        }
     });
     
     mockServer.listen(codeServerPort, '127.0.0.1', () => {
-        logger.info(`🎭 Mock server listening on port ${codeServerPort}`);
+        logger.info(`🎭 VS Code fallback interface listening on port ${codeServerPort}`);
         codeServerReady = true;
     });
 }
