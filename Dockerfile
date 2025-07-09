@@ -48,7 +48,7 @@ COPY scripts/railway-server.mjs scripts/
 COPY railway.json railway.toml ./
 
 # Make scripts executable
-RUN chmod +x scripts/*.js
+RUN chmod +x scripts/railway-server.mjs
 
 # Create workspace directory and setup user with UID conflict resolution
 RUN mkdir -p /tmp/workspace && \
