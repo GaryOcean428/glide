@@ -15,12 +15,12 @@ const logger = {
     }
 };
 
-const http = require('http');
-const https = require('https');
-const url = require('url');
-const cp = require('child_process');
-const path = require('path');
-const fs = require('fs');
+import http from 'http';
+import https from 'https';
+import url from 'url';
+import cp from 'child_process';
+import path from 'path';
+import fs from 'fs';
 
 const port = validatePort(process.env.PORT) || 8080;
 
@@ -56,7 +56,8 @@ function isModuleAvailable(moduleName) {
     }
     
     try {
-        require.resolve(moduleName);
+        // Use dynamic import to check module availability in ES modules
+        import.meta.resolve(moduleName);
         moduleCache.set(moduleName, true);
         return true;
     } catch (e) {
@@ -88,6 +89,10 @@ function startCodeServer() {
     
     // Check native modules first
     const nativeModules = checkNativeModules();
+    
+    // Get current directory from import.meta.url
+    const __filename = url.fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
     
     // Try to find a working code-server installation
     const codeServerCandidates = [

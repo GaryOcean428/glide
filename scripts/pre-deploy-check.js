@@ -8,7 +8,7 @@ const path = require('path');
 // Check required files exist
 const requiredFiles = [
   'Dockerfile',
-  'scripts/railway-server.js',
+  'scripts/railway-server.mjs',
   'package.json',
   'railway.toml'
 ];
@@ -50,7 +50,7 @@ for (const dep of problematicDeps) {
 console.log('\n🔧 Checking scripts...');
 const scripts = packageJson.scripts || {};
 
-if (scripts['railway:start'] === 'node scripts/railway-server.js') {
+if (scripts['railway:start'] === 'node scripts/railway-server.mjs') {
   console.log('✅ railway:start script configured correctly');
 } else {
   console.log('❌ railway:start script misconfigured');

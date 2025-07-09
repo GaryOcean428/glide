@@ -2,13 +2,13 @@
 builder = "dockerfile"
 buildCommand = "echo 'Using pre-built binary strategy'"
 watchPatterns = [
-  "/scripts/railway-server.js",
+  "/scripts/railway-server.mjs",
   "/package.json",
   "/Dockerfile"
 ]
 
 [deploy]
-startCommand = "node scripts/railway-server.js"
+startCommand = "node scripts/railway-server.mjs"
 healthcheckPath = "/healthz"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"

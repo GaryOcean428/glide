@@ -44,7 +44,7 @@ RUN npm config set fetch-retry-mintimeout 20000 && \
     NPM_CONFIG_PRODUCTION=true npm install express http-proxy-middleware minimist --omit=optional --omit=dev --no-fund --no-audit
 
 # Copy application code (minimal files needed)
-COPY scripts/railway-server.js scripts/
+COPY scripts/railway-server.mjs scripts/
 COPY railway.json railway.toml ./
 
 # Make scripts executable
@@ -83,4 +83,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
   CMD curl -f http://0.0.0.0:${PORT:-8080}/healthz || exit 1
 
 # Start application using minimal server
-CMD ["node", "scripts/railway-server.js"]
+CMD ["node", "scripts/railway-server.mjs"]
