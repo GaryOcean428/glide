@@ -13,7 +13,8 @@
 		"moduleResolution": "node",
 		"declaration": true,
 		"sourceMap": true,
-		"jsx": "react-jsx"
+		"jsx": "react-jsx",
+		"types": ["vscode", "node"]
 	},
 	"include": ["src/**/*"],
 	"exclude": ["node_modules", "out", "src/__tests__/**/*"]
