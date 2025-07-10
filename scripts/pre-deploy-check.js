@@ -9,6 +9,7 @@ const path = require('path');
 const requiredFiles = [
   'Dockerfile',
   'scripts/railway-server.mjs',
+  'scripts/railway-server-production.mjs',
   'package.json',
   'railway.toml'
 ];
@@ -50,17 +51,23 @@ for (const dep of problematicDeps) {
 console.log('\n🔧 Checking scripts...');
 const scripts = packageJson.scripts || {};
 
-if (scripts['railway:start'] === 'node scripts/railway-server.mjs') {
-  console.log('✅ railway:start script configured correctly');
+// Check for production server configuration
+if (scripts['railway:start'] === 'node scripts/railway-server-production.mjs') {
+  console.log('✅ railway:start script configured for production server');
+} else if (scripts['railway:start'] === 'node scripts/railway-server.mjs') {
+  console.log('✅ railway:start script configured for development server');
 } else {
   console.log('❌ railway:start script misconfigured');
   dependencyIssues = true;
 }
 
-if (scripts['railway:build'] && scripts['railway:build'].includes('Skipping build')) {
+// Check build script - should either skip build or attempt with fallback
+if (scripts['railway:build'] && 
+    (scripts['railway:build'].includes('Skipping build') || 
+     scripts['railway:build'].includes('fallback mode'))) {
   console.log('✅ railway:build script configured for lightweight deployment');
 } else {
-  console.log('❌ railway:build script not optimized');
+  console.log('❌ railway:build script not optimized for Railway deployment');
   dependencyIssues = true;
 }
 
