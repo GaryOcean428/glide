@@ -59,8 +59,14 @@ export function activate(context: vscode.ExtensionContext): void {
 		await CodeSuggestionProvider.showInteractivePicker(selectedText);
 	});
 
+	// Register the command to open health dashboard
+	const healthDashboardCommand = vscode.commands.registerCommand('gide-coding-agent.openHealthDashboard', () => {
+		webviewHost.showHealthDashboard();
+	});
+
 	context.subscriptions.push(openPanelCommand);
 	context.subscriptions.push(insertCodeCommand);
+	context.subscriptions.push(healthDashboardCommand);
 	context.subscriptions.push(webviewHost);
 
 	console.log('Gide Coding Agent extension activated successfully');

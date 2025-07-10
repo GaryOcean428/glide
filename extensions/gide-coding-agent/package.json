@@ -25,6 +25,11 @@
 				"command": "gide-coding-agent.insertCodeSuggestion",
 				"title": "Insert Code Suggestion",
 				"category": "Gide"
+			},
+			{
+				"command": "gide-coding-agent.openHealthDashboard",
+				"title": "Open API Health Dashboard",
+				"category": "Gide"
 			}
 		],
 		"configuration": {

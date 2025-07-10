@@ -94,8 +94,94 @@ function serveStaticFile(filePath, res) {
 }
 
 /**
- * Check if VS Code is built and ready
+ * Check API providers health status
  */
+function checkAPIHealth() {
+    const providers = [
+        { name: 'openai', envKey: 'OPENAI_API_KEY', viteKey: 'VITE_OPENAI_API_KEY' },
+        { name: 'anthropic', envKey: 'ANTHROPIC_API_KEY', viteKey: 'VITE_ANTHROPIC_API_KEY' },
+        { name: 'perplexity', envKey: 'PERPLEXITY_API_KEY', viteKey: 'VITE_PERPLEXITY_API_KEY' },
+        { name: 'xai', envKey: 'XAI_API_KEY', viteKey: 'VITE_XAI_API_KEY' },
+        { name: 'groq', envKey: 'GROQ_API_KEY', viteKey: 'VITE_GROQ_API_KEY' },
+        { name: 'gemini', envKey: 'GEMINI_API_KEY', viteKey: 'VITE_GEMINI_API_KEY' }
+    ];
+
+    const providerStatus = providers.map(provider => {
+        const serverKey = process.env[provider.envKey];
+        const clientKey = process.env[provider.viteKey];
+        const hasKey = !!(serverKey || clientKey);
+        
+        return {
+            provider: provider.name,
+            configured: hasKey,
+            source: serverKey ? 'server' : (clientKey ? 'client' : 'none'),
+            keyPreview: hasKey ? `${(serverKey || clientKey).substring(0, 8)}...` : null
+        };
+    });
+
+    const configuredCount = providerStatus.filter(p => p.configured).length;
+    
+    return {
+        timestamp: new Date().toISOString(),
+        status: configuredCount > 0 ? 'healthy' : 'warning',
+        providers: {
+            total: providers.length,
+            configured: configuredCount,
+            details: providerStatus
+        },
+        supabase: {
+            url: process.env.VITE_SUPABASE_URL ? 'configured' : 'missing',
+            anonKey: process.env.VITE_SUPABASE_ANON_KEY ? 'configured' : 'missing'
+        }
+    };
+}
+
+/**
+ * Check environment variables configuration status
+ */
+function checkEnvironmentStatus() {
+    const requiredVars = [
+        'NODE_ENV',
+        'PORT'
+    ];
+    
+    const apiVars = [
+        'OPENAI_API_KEY', 'VITE_OPENAI_API_KEY',
+        'ANTHROPIC_API_KEY', 'VITE_ANTHROPIC_API_KEY',
+        'PERPLEXITY_API_KEY', 'VITE_PERPLEXITY_API_KEY',
+        'XAI_API_KEY', 'VITE_XAI_API_KEY',
+        'GROQ_API_KEY', 'VITE_GROQ_API_KEY',
+        'GEMINI_API_KEY', 'VITE_GEMINI_API_KEY'
+    ];
+    
+    const optionalVars = [
+        'VITE_SUPABASE_URL',
+        'VITE_SUPABASE_ANON_KEY',
+        'GIDE_AGENT_ENDPOINT',
+        'GIDE_API_KEY'
+    ];
+
+    const checkVars = (vars) => vars.map(varName => ({
+        name: varName,
+        configured: !!process.env[varName],
+        value: process.env[varName] ? 
+            (varName.includes('KEY') ? `${process.env[varName].substring(0, 8)}...` : process.env[varName]) 
+            : null
+    }));
+
+    return {
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development',
+        required: checkVars(requiredVars),
+        apiKeys: checkVars(apiVars),
+        optional: checkVars(optionalVars),
+        summary: {
+            requiredMissing: requiredVars.filter(v => !process.env[v]).length,
+            apiKeysConfigured: apiVars.filter(v => process.env[v]).length,
+            optionalConfigured: optionalVars.filter(v => process.env[v]).length
+        }
+    };
+}
 function checkVSCodeBuild() {
     const buildPaths = [
         path.join(appRoot, 'out'),
@@ -136,6 +222,22 @@ function handleRequest(req, res) {
             version: '1.102.0',
             build: 'production'
         }));
+        return;
+    }
+    
+    // API health check endpoint
+    if (pathname === '/api/health') {
+        const apiHealth = checkAPIHealth();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(apiHealth));
+        return;
+    }
+    
+    // Environment variables status endpoint
+    if (pathname === '/api/env-status') {
+        const envStatus = checkEnvironmentStatus();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(envStatus));
         return;
     }
     

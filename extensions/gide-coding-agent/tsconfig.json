@@ -14,8 +14,8 @@
 		"declaration": true,
 		"sourceMap": true,
 		"jsx": "react-jsx",
-		"types": ["vscode", "node", "jest", "@testing-library/jest-dom"]
+		"types": ["vscode", "node"]
 	},
 	"include": ["src/**/*"],
-	"exclude": ["node_modules", "out"]
+	"exclude": ["node_modules", "out", "src/__tests__/**/*"]
 }
