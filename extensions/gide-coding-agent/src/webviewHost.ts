@@ -77,6 +77,32 @@ export class WebviewHost implements vscode.Disposable {
 	}
 
 	/**
+	 * Shows the health dashboard panel
+	 */
+	public showHealthDashboard(): void {
+		const panel = vscode.window.createWebviewPanel(
+			'gide-health-dashboard',
+			'🩺 API Health Dashboard',
+			vscode.ViewColumn.Beside,
+			{
+				enableScripts: true,
+				retainContextWhenHidden: true,
+				localResourceRoots: [
+					vscode.Uri.file(path.join(this.context.extensionPath, 'media'))
+				]
+			}
+		);
+
+		panel.webview.html = this.getHealthDashboardContent();
+		
+		panel.webview.onDidReceiveMessage(
+			message => this.handleHealthDashboardMessage(message, panel),
+			undefined,
+			this.disposables
+		);
+	}
+
+	/**
 	 * Handles messages sent from the React UI
 	 */
 	private async handleWebviewMessage(message: any): Promise<void> {
@@ -96,6 +122,18 @@ export class WebviewHost implements vscode.Disposable {
 					break;
 				case 'processCodeSuggestions':
 					await this.handleCodeSuggestions(message.payload);
+					break;
+				case 'getHealthStatus':
+					await this.sendHealthStatus();
+					break;
+				case 'testAPIProvider':
+					await this.handleAPIProviderTest(message.payload);
+					break;
+				case 'getErrorSummary':
+					await this.sendErrorSummary();
+					break;
+				case 'clearErrors':
+					await this.handleClearErrors();
 					break;
 				case 'error':
 					console.error('Webview error:', message.payload);
@@ -748,6 +786,542 @@ export class WebviewHost implements vscode.Disposable {
 			console.error('Error processing code suggestions:', error);
 			vscode.window.showErrorMessage(`Error processing code suggestions: ${error instanceof Error ? error.message : 'Unknown error'}`);
 		}
+	}
+
+	/**
+	 * Sends health status to the webview
+	 */
+	private async sendHealthStatus(): Promise<void> {
+		try {
+			const { createAPIHealthCheck } = await import('./utils/apiValidation');
+			const healthStatus = createAPIHealthCheck();
+			
+			this.panel?.webview.postMessage({
+				type: 'healthStatus',
+				payload: healthStatus
+			});
+		} catch (error) {
+			console.error('Error getting health status:', error);
+			this.panel?.webview.postMessage({
+				type: 'healthError',
+				payload: {
+					error: error instanceof Error ? error.message : 'Failed to get health status'
+				}
+			});
+		}
+	}
+
+	/**
+	 * Handles API provider testing
+	 */
+	private async handleAPIProviderTest(payload: { provider: string }): Promise<void> {
+		try {
+			const { testAPIKeyLive, AI_PROVIDERS } = await import('./utils/apiValidation');
+			const provider = AI_PROVIDERS.find(p => p.name === payload.provider);
+			
+			if (!provider) {
+				throw new Error(`Provider ${payload.provider} not found`);
+			}
+
+			const apiKey = process.env[provider.serverKey] || process.env[provider.envKey];
+			if (!apiKey) {
+				throw new Error(`API key not configured for ${payload.provider}`);
+			}
+
+			const isValid = await testAPIKeyLive(payload.provider, apiKey);
+			
+			this.panel?.webview.postMessage({
+				type: 'providerTestResult',
+				payload: {
+					provider: payload.provider,
+					success: isValid,
+					message: isValid ? 'API key is valid' : 'API key test failed'
+				}
+			});
+		} catch (error) {
+			console.error('Error testing API provider:', error);
+			this.panel?.webview.postMessage({
+				type: 'providerTestResult',
+				payload: {
+					provider: payload.provider,
+					success: false,
+					error: error instanceof Error ? error.message : 'Unknown error'
+				}
+			});
+		}
+	}
+
+	/**
+	 * Sends error summary to the webview
+	 */
+	private async sendErrorSummary(): Promise<void> {
+		try {
+			const { createErrorSummary, getErrorHealthStatus } = await import('./utils/errorTracking');
+			const errorSummary = createErrorSummary();
+			const errorHealth = getErrorHealthStatus();
+			
+			this.panel?.webview.postMessage({
+				type: 'errorSummary',
+				payload: {
+					summary: errorSummary,
+					health: errorHealth
+				}
+			});
+		} catch (error) {
+			console.error('Error getting error summary:', error);
+			this.panel?.webview.postMessage({
+				type: 'errorSummaryError',
+				payload: {
+					error: error instanceof Error ? error.message : 'Failed to get error summary'
+				}
+			});
+		}
+	}
+
+	/**
+	 * Handles clearing stored errors
+	 */
+	private async handleClearErrors(): Promise<void> {
+		try {
+			const { clearErrors } = await import('./utils/errorTracking');
+			clearErrors();
+			
+			this.panel?.webview.postMessage({
+				type: 'errorsCleared',
+				payload: { success: true }
+			});
+		} catch (error) {
+			console.error('Error clearing errors:', error);
+			this.panel?.webview.postMessage({
+				type: 'clearErrorsError',
+				payload: {
+					error: error instanceof Error ? error.message : 'Failed to clear errors'
+				}
+			});
+		}
+	}
+
+	/**
+	 * Handles messages from the health dashboard webview
+	 */
+	private async handleHealthDashboardMessage(message: any, panel: vscode.WebviewPanel): Promise<void> {
+		try {
+			switch (message.type) {
+				case 'getHealthStatus':
+					await this.sendHealthStatusToPanel(panel);
+					break;
+				case 'testAPIProvider':
+					await this.handleAPIProviderTestForPanel(message.payload, panel);
+					break;
+				case 'getErrorSummary':
+					await this.sendErrorSummaryToPanel(panel);
+					break;
+				case 'clearErrors':
+					await this.handleClearErrorsForPanel(panel);
+					break;
+				default:
+					console.warn('Unknown health dashboard message type:', message.type);
+			}
+		} catch (error) {
+			console.error('Error handling health dashboard message:', error);
+			panel.webview.postMessage({
+				type: 'error',
+				payload: error instanceof Error ? error.message : 'Unknown error occurred'
+			});
+		}
+	}
+
+	/**
+	 * Sends health status to a specific panel
+	 */
+	private async sendHealthStatusToPanel(panel: vscode.WebviewPanel): Promise<void> {
+		try {
+			const { createAPIHealthCheck } = await import('./utils/apiValidation');
+			const healthStatus = createAPIHealthCheck();
+			
+			panel.webview.postMessage({
+				type: 'healthStatus',
+				payload: healthStatus
+			});
+		} catch (error) {
+			console.error('Error getting health status:', error);
+			panel.webview.postMessage({
+				type: 'healthError',
+				payload: {
+					error: error instanceof Error ? error.message : 'Failed to get health status'
+				}
+			});
+		}
+	}
+
+	/**
+	 * Handles API provider testing for a specific panel
+	 */
+	private async handleAPIProviderTestForPanel(payload: { provider: string }, panel: vscode.WebviewPanel): Promise<void> {
+		try {
+			const { testAPIKeyLive, AI_PROVIDERS } = await import('./utils/apiValidation');
+			const provider = AI_PROVIDERS.find(p => p.name === payload.provider);
+			
+			if (!provider) {
+				throw new Error(`Provider ${payload.provider} not found`);
+			}
+
+			const apiKey = process.env[provider.serverKey] || process.env[provider.envKey];
+			if (!apiKey) {
+				throw new Error(`API key not configured for ${payload.provider}`);
+			}
+
+			const isValid = await testAPIKeyLive(payload.provider, apiKey);
+			
+			panel.webview.postMessage({
+				type: 'providerTestResult',
+				payload: {
+					provider: payload.provider,
+					success: isValid,
+					message: isValid ? 'API key is valid' : 'API key test failed'
+				}
+			});
+		} catch (error) {
+			console.error('Error testing API provider:', error);
+			panel.webview.postMessage({
+				type: 'providerTestResult',
+				payload: {
+					provider: payload.provider,
+					success: false,
+					error: error instanceof Error ? error.message : 'Unknown error'
+				}
+			});
+		}
+	}
+
+	/**
+	 * Sends error summary to a specific panel
+	 */
+	private async sendErrorSummaryToPanel(panel: vscode.WebviewPanel): Promise<void> {
+		try {
+			const { createErrorSummary, getErrorHealthStatus } = await import('./utils/errorTracking');
+			const errorSummary = createErrorSummary();
+			const errorHealth = getErrorHealthStatus();
+			
+			panel.webview.postMessage({
+				type: 'errorSummary',
+				payload: {
+					summary: errorSummary,
+					health: errorHealth
+				}
+			});
+		} catch (error) {
+			console.error('Error getting error summary:', error);
+			panel.webview.postMessage({
+				type: 'errorSummaryError',
+				payload: {
+					error: error instanceof Error ? error.message : 'Failed to get error summary'
+				}
+			});
+		}
+	}
+
+	/**
+	 * Handles clearing stored errors for a specific panel
+	 */
+	private async handleClearErrorsForPanel(panel: vscode.WebviewPanel): Promise<void> {
+		try {
+			const { clearErrors } = await import('./utils/errorTracking');
+			clearErrors();
+			
+			panel.webview.postMessage({
+				type: 'errorsCleared',
+				payload: { success: true }
+			});
+		} catch (error) {
+			console.error('Error clearing errors:', error);
+			panel.webview.postMessage({
+				type: 'clearErrorsError',
+				payload: {
+					error: error instanceof Error ? error.message : 'Failed to clear errors'
+				}
+			});
+		}
+	}
+
+	/**
+	 * Gets the health dashboard webview content
+	 */
+	private getHealthDashboardContent(): string {
+		return `<!DOCTYPE html>
+		<html lang="en">
+		<head>
+			<meta charset="UTF-8">
+			<meta name="viewport" content="width=device-width, initial-scale=1.0">
+			<title>API Health Dashboard</title>
+			<style>
+				body {
+					margin: 0;
+					padding: 0;
+					background: var(--vscode-editor-background);
+					color: var(--vscode-editor-foreground);
+					font-family: var(--vscode-font-family);
+				}
+				#root {
+					height: 100vh;
+					overflow: auto;
+				}
+			</style>
+		</head>
+		<body>
+			<div id="root"></div>
+			
+			<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+			<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+			
+			<script>
+				const vscode = acquireVsCodeApi();
+				const { useState, useEffect } = React;
+
+				const HealthDashboard = () => {
+					const [healthStatus, setHealthStatus] = useState(null);
+					const [errorStatus, setErrorStatus] = useState(null);
+					const [lastUpdated, setLastUpdated] = useState(new Date());
+					const [autoRefresh, setAutoRefresh] = useState(true);
+					const [testing, setTesting] = useState({});
+
+					const refreshHealth = () => {
+						vscode.postMessage({ type: 'getHealthStatus' });
+						vscode.postMessage({ type: 'getErrorSummary' });
+						setLastUpdated(new Date());
+					};
+
+					useEffect(() => {
+						refreshHealth();
+
+						const messageHandler = (event) => {
+							const message = event.data;
+							switch (message.type) {
+								case 'healthStatus':
+									setHealthStatus(message.payload);
+									break;
+								case 'errorSummary':
+									setErrorStatus(message.payload);
+									break;
+								case 'providerTestResult':
+									setTesting(prev => ({ ...prev, [message.payload.provider]: false }));
+									if (message.payload.success) {
+										alert(\`✅ \${message.payload.provider}: \${message.payload.message}\`);
+									} else {
+										alert(\`❌ \${message.payload.provider}: \${message.payload.error || message.payload.message}\`);
+									}
+									break;
+								case 'errorsCleared':
+									refreshHealth();
+									break;
+							}
+						};
+
+						window.addEventListener('message', messageHandler);
+
+						let interval;
+						if (autoRefresh) {
+							interval = setInterval(refreshHealth, 30000);
+						}
+
+						return () => {
+							window.removeEventListener('message', messageHandler);
+							if (interval) clearInterval(interval);
+						};
+					}, [autoRefresh]);
+
+					const testProvider = (provider) => {
+						setTesting(prev => ({ ...prev, [provider]: true }));
+						vscode.postMessage({ type: 'testAPIProvider', payload: { provider } });
+					};
+
+					const clearErrors = () => {
+						if (confirm('Clear all stored errors?')) {
+							vscode.postMessage({ type: 'clearErrors' });
+						}
+					};
+
+					const getStatusIcon = (isValid) => isValid ? '✅' : '❌';
+					const getOverallStatus = () => {
+						if (!healthStatus) return 'unknown';
+						const validProviders = healthStatus.apiKeys.valid;
+						const totalProviders = healthStatus.apiKeys.total;
+						if (validProviders === 0) return 'critical';
+						if (validProviders < totalProviders / 2) return 'warning';
+						return 'healthy';
+					};
+
+					const getStatusColor = (status) => {
+						switch (status) {
+							case 'healthy': return '#28a745';
+							case 'warning': return '#ffc107';
+							case 'critical': return '#dc3545';
+							default: return '#6c757d';
+						}
+					};
+
+					if (!healthStatus) {
+						return React.createElement('div', { style: { padding: '20px', textAlign: 'center' } },
+							React.createElement('div', null, '🔄 Loading health status...')
+						);
+					}
+
+					const overallStatus = getOverallStatus();
+
+					return React.createElement('div', { style: { padding: '20px' } },
+						React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '10px', borderBottom: '1px solid var(--vscode-panel-border)' } },
+							React.createElement('h1', { style: { margin: 0 } }, '🩺 API Health Dashboard'),
+							React.createElement('div', { style: { display: 'flex', gap: '10px', alignItems: 'center' } },
+								React.createElement('span', { 
+									style: { 
+										padding: '4px 8px', 
+										borderRadius: '4px', 
+										fontSize: '12px', 
+										fontWeight: 'bold', 
+										textTransform: 'uppercase',
+										backgroundColor: getStatusColor(overallStatus),
+										color: 'white'
+									} 
+								}, overallStatus),
+								React.createElement('label', { style: { display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' } },
+									React.createElement('input', { 
+										type: 'checkbox', 
+										checked: autoRefresh, 
+										onChange: (e) => setAutoRefresh(e.target.checked) 
+									}),
+									'Auto-refresh'
+								),
+								React.createElement('button', { 
+									onClick: refreshHealth,
+									style: { 
+										background: 'var(--vscode-button-background)', 
+										color: 'var(--vscode-button-foreground)', 
+										border: 'none', 
+										padding: '6px 12px', 
+										borderRadius: '4px', 
+										cursor: 'pointer' 
+									} 
+								}, '🔄 Refresh')
+							)
+						),
+
+						React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' } },
+							React.createElement('div', { style: { background: 'var(--vscode-panel-background)', border: '1px solid var(--vscode-panel-border)', borderRadius: '6px', padding: '16px' } },
+								React.createElement('h3', { style: { marginTop: 0 } }, 'API Providers'),
+								React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } },
+									healthStatus.apiKeys.providers.map((provider, index) =>
+										React.createElement('div', { key: index, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0' } },
+											React.createElement('span', { style: { textTransform: 'capitalize' } }, provider.provider),
+											React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '6px' } },
+												React.createElement('span', null, getStatusIcon(provider.isValid)),
+												React.createElement('span', { style: { fontSize: '12px' } }, provider.isValid ? 'Valid' : 'Invalid'),
+												provider.isValid && React.createElement('button', {
+													onClick: () => testProvider(provider.provider),
+													disabled: testing[provider.provider],
+													style: { 
+														background: 'var(--vscode-button-background)', 
+														color: 'var(--vscode-button-foreground)', 
+														border: 'none', 
+														padding: '2px 6px', 
+														borderRadius: '3px', 
+														cursor: 'pointer',
+														fontSize: '10px'
+													}
+												}, testing[provider.provider] ? '...' : 'Test')
+											)
+										)
+									)
+								),
+								React.createElement('div', { style: { marginTop: '12px', fontSize: '12px', opacity: 0.8 } },
+									\`\${healthStatus.apiKeys.valid} of \${healthStatus.apiKeys.total} providers configured\`
+								)
+							),
+
+							React.createElement('div', { style: { background: 'var(--vscode-panel-background)', border: '1px solid var(--vscode-panel-border)', borderRadius: '6px', padding: '16px' } },
+								React.createElement('h3', { style: { marginTop: 0 } }, 'System Status'),
+								React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } },
+									React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+										React.createElement('span', null, 'Environment'),
+										React.createElement('span', null, healthStatus.environment)
+									),
+									React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+										React.createElement('span', null, 'Supabase URL'),
+										React.createElement('span', null, getStatusIcon(healthStatus.supabase?.url === 'configured'))
+									),
+									React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+										React.createElement('span', null, 'Supabase Key'),
+										React.createElement('span', null, getStatusIcon(healthStatus.supabase?.anonKey === 'configured'))
+									)
+								)
+							)
+						),
+
+						errorStatus?.summary && React.createElement('div', { style: { background: 'var(--vscode-panel-background)', border: '1px solid var(--vscode-panel-border)', borderRadius: '6px', padding: '16px' } },
+							React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' } },
+								React.createElement('h3', { style: { margin: 0 } }, 'Error Summary'),
+								React.createElement('button', {
+									onClick: clearErrors,
+									style: { 
+										background: 'var(--vscode-button-background)', 
+										color: 'var(--vscode-button-foreground)', 
+										border: 'none', 
+										padding: '4px 8px', 
+										borderRadius: '3px', 
+										cursor: 'pointer',
+										fontSize: '11px'
+									}
+								}, 'Clear Errors')
+							),
+							React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '12px' } },
+								React.createElement('div', { style: { textAlign: 'center', padding: '8px', background: 'var(--vscode-input-background)', borderRadius: '4px' } },
+									React.createElement('div', { style: { fontSize: '18px', fontWeight: 'bold' } }, errorStatus.summary.totalErrors),
+									React.createElement('div', { style: { fontSize: '11px', opacity: 0.8, textTransform: 'uppercase' } }, 'Total')
+								),
+								React.createElement('div', { style: { textAlign: 'center', padding: '8px', background: 'var(--vscode-input-background)', borderRadius: '4px' } },
+									React.createElement('div', { style: { fontSize: '18px', fontWeight: 'bold' } }, errorStatus.summary.recentErrors),
+									React.createElement('div', { style: { fontSize: '11px', opacity: 0.8, textTransform: 'uppercase' } }, 'Recent')
+								),
+								React.createElement('div', { style: { textAlign: 'center', padding: '8px', background: 'var(--vscode-input-background)', borderRadius: '4px' } },
+									React.createElement('div', { style: { fontSize: '18px', fontWeight: 'bold' } }, Object.keys(errorStatus.summary.providerErrors).length),
+									React.createElement('div', { style: { fontSize: '11px', opacity: 0.8, textTransform: 'uppercase' } }, 'Providers')
+								),
+								React.createElement('div', { style: { textAlign: 'center', padding: '8px', background: 'var(--vscode-input-background)', borderRadius: '4px' } },
+									React.createElement('div', { style: { fontSize: '18px', fontWeight: 'bold' } }, errorStatus.summary.topErrors.length),
+									React.createElement('div', { style: { fontSize: '11px', opacity: 0.8, textTransform: 'uppercase' } }, 'Types')
+								)
+							),
+							errorStatus.summary.topErrors.length > 0 && React.createElement('div', null,
+								React.createElement('div', { style: { marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' } }, 'Most Common Errors:'),
+								errorStatus.summary.topErrors.slice(0, 3).map((error, index) =>
+									React.createElement('div', { 
+										key: index, 
+										style: { 
+											fontSize: '12px', 
+											opacity: 0.8, 
+											marginBottom: '4px',
+											padding: '4px',
+											background: 'var(--vscode-input-background)',
+											borderRadius: '3px'
+										} 
+									},
+									React.createElement('strong', null, \`\${error.count}x\`),
+									\` \${error.message.substring(0, 60)}\${error.message.length > 60 ? '...' : ''}\`
+									)
+								)
+							)
+						),
+
+						React.createElement('div', { style: { textAlign: 'center', fontSize: '11px', opacity: 0.7, marginTop: '16px' } },
+							\`Last updated: \${lastUpdated.toLocaleTimeString()}\`,
+							autoRefresh && ' • Auto-refresh enabled (30s)'
+						)
+					);
+				};
+
+				ReactDOM.render(React.createElement(HealthDashboard), document.getElementById('root'));
+			</script>
+		</body>
+		</html>`;
 	}
 
 	/**

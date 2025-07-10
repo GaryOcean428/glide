@@ -1,0 +1,39 @@
+# Local development settings
+project_id = "your-project-id"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[functions]
+enabled = true
+port = 54322
+
+[storage]
+enabled = true
+port = 54323
+image_transformation_enabled = true
+
+[auth]
+enabled = true
+port = 54324
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000"]
+jwt_expiry = 3600
+jwt_secret = "super-secret-jwt-token-with-at-least-32-characters-long"
+
+[edge_runtime]
+policy = "always"
+timeout = 30
+
+[db]
+port = 54325
+major_version = 15
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
