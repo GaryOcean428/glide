@@ -18,6 +18,7 @@ vscode.db
 /.profile-oss
 /cli/target
 /cli/openssl
+.backup/
 
 # Package manager lock files - use yarn.lock instead
 package-lock.json

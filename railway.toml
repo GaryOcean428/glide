@@ -9,7 +9,6 @@ watchPatterns = [
 
 [deploy]
 startCommand = "npm run railway:start"
-healthcheckPath = "/healthz"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
