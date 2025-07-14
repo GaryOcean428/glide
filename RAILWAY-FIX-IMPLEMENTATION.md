@@ -112,3 +112,65 @@ This replaces the previous `railway-server-production-fixed.mjs` which served st
 5. ✅ Maintains Railway deployment compatibility
 
 The fix resolves the core issue where Railway health checks were overriding the VS Code UI.
+
+---
+
+## Additional Fix: "Cannot find module @vscode/test-web" Error
+
+### Problem Summary
+
+The Railway deployment was also failing with:
+```
+Cannot find module '@vscode/test-web'
+```
+
+This occurred because Railway's default Railpack builder prunes `devDependencies` during production builds.
+
+### Root Cause
+
+1. **Railway's Default Behavior**: `RAILPACK_PRUNE_DEPS=true` by default executes `npm prune --omit=dev`
+2. **Previous Docker Approach**: Using Dockerfile bypassed Railpack but had dependency availability issues
+3. **Runtime Requirement**: `railway-vscode-server.mjs` requires `@vscode/test-web` at runtime
+
+### Solution Applied
+
+#### 1. Switched to Railpack Builder
+
+**Changed railway.json:**
+```json
+{
+  "build": {
+    "builder": "RAILPACK"
+  }
+}
+```
+
+#### 2. Prevented Dependency Pruning
+
+**Added to railway.toml:**
+```toml
+[env]
+RAILPACK_PRUNE_DEPS = "false"
+```
+
+#### 3. Verified Dependencies
+
+- ✅ `@vscode/test-web: ^0.0.62` in dependencies (not devDependencies)
+- ✅ `http-proxy-middleware: ^2.0.6` in dependencies  
+- ✅ `express: ^4.18.2` in dependencies
+
+### Validation
+
+Run verification:
+```bash
+node scripts/verify-railway-fix.mjs
+```
+
+### Expected Results
+
+1. **Build Success**: All dependencies installed without pruning
+2. **Module Resolution**: `@vscode/test-web` available at runtime
+3. **VS Code UI**: Interface displays correctly
+4. **Extension Ready**: `gide-coding-agent` extension properly set up
+
+This implements the exact solution from the problem statement: *"modify Railway's build configuration by setting the `RAILPACK_PRUNE_DEPS` environment variable to `false`"*
