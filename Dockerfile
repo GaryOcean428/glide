@@ -41,7 +41,7 @@ COPY package*.json ./
 RUN npm config set fetch-retry-mintimeout 20000 && \
     npm config set fetch-retry-maxtimeout 120000 && \
     npm config set fetch-retries 5 && \
-    NPM_CONFIG_PRODUCTION=true npm install express http-proxy-middleware minimist @vscode/test-web --omit=optional --omit=dev --no-fund --no-audit
+    npm install --omit=optional --omit=dev --no-fund --no-audit
 
 # Copy application code (minimal files needed)
 COPY scripts/railway-vscode-server.mjs scripts/
