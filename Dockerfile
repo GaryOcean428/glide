@@ -10,7 +10,8 @@ ENV ELECTRON_SKIP_BINARY_DOWNLOAD=1 \
     DISABLE_TELEMETRY=true \
     DISABLE_UPDATE_CHECK=true \
     NODE_ENV=production \
-    SKIP_NATIVE_MODULES=1
+    SKIP_NATIVE_MODULES=1 \
+    VSCODE_SKIP_NODE_VERSION_CHECK=1
 
 # Configure APT to prevent hangs and timeouts
 RUN echo 'Acquire::http::Timeout "30";' > /etc/apt/apt.conf.d/99timeout && \
@@ -34,8 +35,9 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files and build scripts needed for npm install
 COPY package*.json ./
+COPY build/npm/ ./build/npm/
 
 # Install only essential dependencies without dev packages
 RUN npm config set fetch-retry-mintimeout 20000 && \

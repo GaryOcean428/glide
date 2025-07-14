@@ -15,6 +15,7 @@ coverage
 *.7z
 dist
 build
+!build/npm
 tmp
 temp
 .cache
