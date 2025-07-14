@@ -34,6 +34,7 @@
     "railway:start": "node scripts/railway-vscode-server.mjs",
     "railway:health": "node -e \"const http = require('http'); const port = process.env.PORT || 8080; const req = http.get('http://localhost:' + port + '/healthz', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }); req.on('error', () => process.exit(1));\"",
     "validate-deployment": "node scripts/validate-deployment.js",
+    "validate-railway-fix": "node scripts/validate-railway-fix.mjs",
     "pre-deploy-check": "node scripts/pre-deploy-check.js",
     "watch": "yarn run watch-client && yarn run watch-extensions",
     "watchd": "deemon yarn run watch",
