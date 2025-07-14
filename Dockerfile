@@ -44,11 +44,11 @@ RUN npm config set fetch-retry-mintimeout 20000 && \
     NPM_CONFIG_PRODUCTION=true npm install express http-proxy-middleware minimist --omit=optional --omit=dev --no-fund --no-audit
 
 # Copy application code (minimal files needed)
-COPY scripts/railway-server-production.mjs scripts/
+COPY scripts/railway-server-production-fixed.mjs scripts/
 COPY railway.json railway.toml ./
 
 # Make scripts executable
-RUN chmod +x scripts/railway-server-production.mjs
+RUN chmod +x scripts/railway-server-production-fixed.mjs
 
 # Create workspace directory and setup user with UID conflict resolution
 RUN mkdir -p /tmp/workspace && \
