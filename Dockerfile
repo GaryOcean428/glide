@@ -41,14 +41,14 @@ COPY package*.json ./
 RUN npm config set fetch-retry-mintimeout 20000 && \
     npm config set fetch-retry-maxtimeout 120000 && \
     npm config set fetch-retries 5 && \
-    NPM_CONFIG_PRODUCTION=true npm install express http-proxy-middleware minimist --omit=optional --omit=dev --no-fund --no-audit
+    NPM_CONFIG_PRODUCTION=true npm install express http-proxy-middleware minimist @vscode/test-web --omit=optional --omit=dev --no-fund --no-audit
 
 # Copy application code (minimal files needed)
-COPY scripts/railway-server-production-fixed.mjs scripts/
+COPY scripts/railway-vscode-server.mjs scripts/
 COPY railway.json railway.toml ./
 
 # Make scripts executable
-RUN chmod +x scripts/railway-server-production-fixed.mjs
+RUN chmod +x scripts/railway-vscode-server.mjs
 
 # Create workspace directory and setup user with UID conflict resolution
 RUN mkdir -p /tmp/workspace && \
@@ -82,5 +82,5 @@ EXPOSE $PORT
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
   CMD curl -f http://0.0.0.0:${PORT:-8080}/healthz || exit 1
 
-# Start application using minimal server
-CMD ["node", "scripts/railway-server-production.mjs"]
+# Start application using VS Code web server
+CMD ["node", "scripts/railway-vscode-server.mjs"]
