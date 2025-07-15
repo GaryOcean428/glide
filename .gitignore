@@ -19,6 +19,9 @@ vscode.db
 /cli/target
 /cli/openssl
 
+# Reports and QA audit output
+reports/
+
 # Railway environment backup
 .env.railway.backup
 .backup/

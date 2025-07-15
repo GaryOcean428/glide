@@ -1,0 +1,265 @@
+Component Architecture Analysis
+===============================
+Date: Tue Jul 15 12:54:17 UTC 2025
+
+Component file count analysis:
+React/JSX components: 10
+Vue components: 0
+
+Component size distribution:
+===========================
+React/JSX component sizes (lines of code):
+456 ./extensions/gide-coding-agent/src/ui/AgentPanel.tsx
+394 ./extensions/gide-coding-agent/src/ui/HealthDashboard.tsx
+228 ./extensions/gide-coding-agent/src/__tests__/ui/ErrorBoundary.test.tsx
+168 ./extensions/gide-coding-agent/src/ui/ErrorBoundary.tsx
+144 ./extensions/gide-coding-agent/src/ui/CodeSuggestionButton.tsx
+127 ./extensions/gide-coding-agent/src/ui/ContextModeSelector.tsx
+34 ./extensions/vscode-colorize-tests/test/colorize-fixtures/test.jsx
+20 ./src/vs/editor/test/node/diffing/fixtures/ws-alignment/2.tsx
+16 ./src/vs/editor/test/node/diffing/fixtures/ws-alignment/1.tsx
+5 ./extensions/vscode-colorize-tests/test/colorize-fixtures/test-brackets.tsx
+
+Components over 200 lines (refactoring candidates):
+456 ./extensions/gide-coding-agent/src/ui/AgentPanel.tsx
+394 ./extensions/gide-coding-agent/src/ui/HealthDashboard.tsx
+228 ./extensions/gide-coding-agent/src/__tests__/ui/ErrorBoundary.test.tsx
+
+Components under 50 lines (potential for consolidation):
+16 ./src/vs/editor/test/node/diffing/fixtures/ws-alignment/1.tsx
+20 ./src/vs/editor/test/node/diffing/fixtures/ws-alignment/2.tsx
+34 ./extensions/vscode-colorize-tests/test/colorize-fixtures/test.jsx
+
+Prop interface analysis:
+========================
+Files with prop interfaces: 14
+
+Components potentially missing prop interfaces:
+./extensions/gide-coding-agent/src/__tests__/ui/ErrorBoundary.test.tsx
+./extensions/gide-coding-agent/src/ui/CodeSuggestionButton.tsx
+./extensions/gide-coding-agent/src/ui/AgentPanel.tsx
+./extensions/gide-coding-agent/src/ui/ErrorBoundary.tsx
+./extensions/gide-coding-agent/src/ui/ContextModeSelector.tsx
+./extensions/gide-coding-agent/src/ui/HealthDashboard.tsx
+
+Hook usage patterns:
+====================
+Files using hooks: 698
+
+Components with high hook usage (potential complexity):
+310 ./extensions/vscode-colorize-perf-tests/test/colorize-fixtures/test-checker.ts
+205 ./src/vs/editor/browser/controller/mouseHandler.ts
+168 ./src/vs/editor/browser/controller/mouseTarget.ts
+154 ./src/vs/workbench/services/configuration/test/browser/configurationService.test.ts
+76 ./src/vs/monaco.d.ts
+64 ./src/vs/editor/browser/editorBrowser.ts
+62 ./src/vs/base/browser/ui/scrollbar/scrollableElement.ts
+52 ./src/vs/platform/list/browser/listService.ts
+51 ./src/vs/editor/contrib/hover/browser/contentHoverController.ts
+48 ./src/vs/base/browser/ui/list/listWidget.ts
+46 ./src/vs/editor/contrib/stickyScroll/browser/stickyScrollController.ts
+45 ./src/vs/workbench/browser/actions/developerActions.ts
+45 ./src/vs/base/browser/ui/list/listView.ts
+44 ./src/vs/editor/contrib/dnd/browser/dnd.ts
+42 ./src/vs/editor/common/config/editorOptions.ts
+40 ./src/vs/editor/contrib/hover/browser/glyphHoverController.ts
+40 ./src/vs/editor/contrib/gotoSymbol/browser/link/clickLinkGesture.ts
+40 ./src/vs/base/browser/dom.ts
+38 ./src/vs/editor/browser/view/viewUserInputEvents.ts
+36 ./src/vs/workbench/contrib/userDataProfile/browser/userDataProfilesEditor.ts
+34 ./src/vs/editor/browser/view/viewController.ts
+34 ./src/vs/base/common/date.ts
+31 ./src/vs/editor/contrib/links/browser/links.ts
+30 ./src/vs/editor/browser/widget/codeEditor/codeEditorWidget.ts
+30 ./src/vs/base/test/browser/ui/scrollbar/scrollableElement.test.ts
+29 ./src/vs/workbench/contrib/preferences/browser/preferencesRenderers.ts
+28 ./extensions/git/src/repository.ts
+27 ./src/vs/editor/browser/services/hoverService/hoverWidget.ts
+27 ./src/vs/editor/browser/editorDom.ts
+26 ./src/vs/base/browser/ui/tree/abstractTree.ts
+26 ./extensions/npm/src/features/date.ts
+26 ./extensions/git/src/util.ts
+24 ./src/vs/workbench/browser/parts/editor/multiEditorTabsControl.ts
+23 ./src/vs/workbench/contrib/debug/browser/debugEditorContribution.ts
+23 ./src/vs/editor/contrib/hover/browser/contentHoverWidgetWrapper.ts
+22 ./src/vs/workbench/contrib/search/browser/searchView.ts
+22 ./src/vs/workbench/contrib/comments/browser/commentsController.ts
+21 ./src/vs/workbench/contrib/terminalContrib/zoom/browser/terminal.zoom.contribution.ts
+21 ./src/vs/platform/actions/browser/menuEntryActionViewItem.ts
+21 ./src/vs/editor/browser/controller/pointerHandler.ts
+20 ./src/vs/workbench/api/common/extHostWorkspace.ts
+20 ./src/vs/editor/contrib/folding/browser/folding.ts
+19 ./src/vs/workbench/contrib/search/browser/search.contribution.ts
+19 ./src/vs/workbench/contrib/search/browser/patternInputWidget.ts
+19 ./src/vs/platform/userDataSync/test/common/userDataProfilesManifestSync.test.ts
+19 ./src/vs/platform/request/common/request.ts
+19 ./src/vs/editor/contrib/contextmenu/browser/contextmenu.ts
+19 ./src/vs/base/browser/ui/sash/sash.ts
+19 ./src/vs/base/browser/ui/menu/menubar.ts
+18 ./src/vs/workbench/services/views/test/browser/viewContainerModel.test.ts
+18 ./src/vs/workbench/services/search/common/searchExtConversionTypes.ts
+18 ./src/vs/platform/userDataSync/test/common/settingsSync.test.ts
+18 ./src/vs/platform/quickinput/browser/quickInputController.ts
+18 ./extensions/html-language-features/server/lib/jquery.d.ts
+17 ./src/vs/workbench/contrib/terminalContrib/suggest/browser/terminalCompletionService.ts
+17 ./src/vs/workbench/contrib/scm/browser/quickDiffWidget.ts
+17 ./src/vs/editor/contrib/gotoSymbol/browser/link/goToDefinitionAtPosition.ts
+17 ./src/vs/editor/contrib/folding/browser/foldingRanges.ts
+17 ./src/vs/base/browser/ui/menu/menu.ts
+16 ./src/vs/workbench/contrib/notebook/browser/notebookEditorWidget.ts
+16 ./src/vs/platform/userDataProfile/common/userDataProfile.ts
+16 ./extensions/terminal-suggest/src/completions/upstream/git.ts
+15 ./src/vs/workbench/contrib/extensions/test/electron-browser/extensionRecommendationsService.test.ts
+15 ./src/vs/platform/userDataProfile/test/common/userDataProfileService.test.ts
+15 ./src/vs/editor/contrib/middleScroll/browser/middleScrollController.ts
+15 ./src/vs/editor/browser/services/hoverService/hoverService.ts
+14 ./src/vs/workbench/services/userDataProfile/browser/userDataProfileImportExportService.ts
+14 ./src/vs/workbench/services/history/browser/historyService.ts
+14 ./src/vs/workbench/contrib/debug/browser/debugToolBar.ts
+14 ./src/vs/workbench/contrib/chat/browser/chatSetup.ts
+14 ./src/vs/editor/browser/view.ts
+14 ./src/vs/base/browser/ui/scrollbar/scrollableElementOptions.ts
+14 ./src/vs/base/browser/ui/contextview/contextview.ts
+14 ./src/vs/base/browser/mouseEvent.ts
+13 ./src/vs/workbench/contrib/chat/common/chatModel.ts
+13 ./src/vs/platform/log/common/log.ts
+13 ./src/vs/editor/contrib/suggest/browser/suggestWidget.ts
+12 ./src/vs/workbench/contrib/terminal/browser/xterm/xtermTerminal.ts
+12 ./src/vs/workbench/contrib/terminal/browser/terminalInstance.ts
+12 ./src/vs/workbench/contrib/notebook/browser/viewParts/notebookEditorToolbar.ts
+12 ./src/vs/workbench/api/test/browser/extHostLanguageFeatures.test.ts
+12 ./src/vs/editor/contrib/inlineCompletions/browser/view/ghostText/ghostTextView.ts
+12 ./src/vs/editor/browser/viewParts/editorScrollbar/editorScrollbar.ts
+12 ./src/vs/editor/browser/controller/editContext/textArea/textAreaEditContext.ts
+12 ./extensions/typescript-language-features/src/tsServer/nodeManager.ts
+12 ./extensions/gide-coding-agent/src/webviewHost.ts
+12 ./extensions/gide-coding-agent/src/ui/AgentPanel.tsx
+11 ./src/vs/workbench/contrib/update/browser/releaseNotesEditor.ts
+11 ./src/vs/workbench/contrib/terminal/browser/terminalTabbedView.ts
+11 ./src/vs/workbench/contrib/searchEditor/browser/searchEditor.ts
+11 ./src/vs/workbench/browser/parts/views/viewPaneContainer.ts
+11 ./src/vs/workbench/browser/actions/layoutActions.ts
+11 ./src/vs/editor/test/browser/controller/cursor.test.ts
+11 ./src/vs/editor/test/browser/commands/shiftCommand.test.ts
+11 ./src/vs/editor/contrib/inlineCompletions/browser/view/inlineEdits/inlineEditsViews/originalEditorInlineDiffView.ts
+11 ./src/vs/editor/contrib/inlineCompletions/browser/hintsWidget/hoverParticipant.ts
+10 ./src/vs/workbench/services/search/common/search.ts
+10 ./src/vs/workbench/contrib/userDataProfile/browser/userDataProfilesEditorModel.ts
+10 ./src/vs/workbench/contrib/notebook/browser/view/renderers/webviewMessages.ts
+10 ./src/vs/workbench/contrib/notebook/browser/diff/notebookDiffList.ts
+10 ./src/vs/workbench/contrib/notebook/browser/diff/notebookDiffEditor.ts
+10 ./src/vs/workbench/contrib/debug/browser/callStackWidget.ts
+10 ./src/vs/workbench/contrib/comments/browser/commentThreadZoneWidget.ts
+10 ./src/vs/workbench/contrib/chat/common/chatServiceImpl.ts
+10 ./src/vs/platform/windows/electron-main/windowImpl.ts
+10 ./src/vs/platform/userDataSync/test/common/globalStateSync.test.ts
+10 ./src/vs/platform/configuration/test/common/configurationService.test.ts
+10 ./src/vs/editor/contrib/parameterHints/test/browser/parameterHintsModel.test.ts
+10 ./src/vs/editor/contrib/inlayHints/browser/inlayHintsHover.ts
+10 ./src/vs/editor/contrib/hover/browser/glyphHoverWidget.ts
+10 ./src/vs/editor/contrib/hover/browser/contentHoverWidget.ts
+10 ./src/vs/editor/browser/widget/diffEditor/features/hideUnchangedRegionsFeature.ts
+10 ./src/vs/editor/browser/widget/diffEditor/components/diffEditorViewZones/diffEditorViewZones.ts
+10 ./src/vs/base/parts/ipc/test/node/ipc.net.test.ts
+10 ./src/vs/base/browser/ui/table/tableWidget.ts
+10 ./src/vs/base/browser/ui/list/listPaging.ts
+10 ./extensions/vscode-test-resolver/src/extension.ts
+10 ./extensions/typescript-language-features/src/tsServer/versionManager.ts
+10 ./extensions/github-authentication/src/flows.ts
+9 ./src/vs/workbench/services/dialogs/electron-browser/fileDialogService.ts
+9 ./src/vs/workbench/contrib/files/browser/fileActions.ts
+9 ./src/vs/workbench/contrib/debug/browser/breakpointEditorContribution.ts
+9 ./src/vs/workbench/browser/parts/editor/editorDropTarget.ts
+9 ./src/vs/workbench/api/node/proxyResolver.ts
+9 ./src/vs/platform/terminal/node/terminalProcess.ts
+9 ./src/vs/platform/files/test/node/diskFileService.integrationTest.ts
+9 ./src/vs/editor/contrib/inlayHints/browser/inlayHintsController.ts
+9 ./src/vs/base/browser/ui/widget.ts
+9 ./extensions/git/src/commands.ts
+8 ./src/vscode-dts/vscode.proposed.findFiles2.d.ts
+8 ./src/vs/workbench/services/languageDetection/browser/languageDetectionWorkerServiceImpl.ts
+8 ./src/vs/workbench/contrib/testing/browser/testingDecorations.ts
+8 ./src/vs/workbench/contrib/notebook/browser/view/renderers/webviewPreloads.ts
+8 ./src/vs/workbench/contrib/debug/browser/debugHover.ts
+8 ./src/vs/workbench/contrib/comments/browser/timestamp.ts
+8 ./src/vs/workbench/browser/parts/paneCompositePart.ts
+8 ./src/vs/workbench/api/common/extHostTerminalService.ts
+8 ./src/vs/platform/quickinput/browser/quickInputTree.ts
+8 ./src/vs/editor/contrib/inlineCompletions/browser/view/inlineEdits/inlineEditsViews/inlineEditsLineReplacementView.ts
+8 ./src/vs/editor/contrib/hover/browser/resizableContentWidget.ts
+8 ./src/vs/editor/contrib/hover/browser/hoverTypes.ts
+8 ./src/vs/editor/common/commands/shiftCommand.ts
+8 ./src/vs/editor/browser/widget/diffEditor/diffEditorOptions.ts
+8 ./src/vs/base/test/common/timeTravelScheduler.ts
+8 ./src/vs/base/browser/event.ts
+8 ./extensions/php-language-features/src/features/validationProvider.ts
+8 ./extensions/extension-editing/src/extensionLinter.ts
+7 ./src/vscode-dts/vscode.proposed.findTextInFiles2.d.ts
+7 ./src/vscode-dts/vscode.proposed.findTextInFiles.d.ts
+7 ./src/vs/workbench/services/suggest/browser/simpleSuggestWidget.ts
+7 ./src/vs/workbench/contrib/welcomeWalkthrough/browser/walkThroughPart.ts
+7 ./src/vs/workbench/contrib/terminal/test/node/terminalProfiles.test.ts
+7 ./src/vs/workbench/contrib/terminal/browser/terminalActions.ts
+7 ./src/vs/workbench/contrib/tasks/common/taskConfiguration.ts
+7 ./src/vs/workbench/contrib/notebook/browser/contrib/outline/notebookOutline.ts
+7 ./src/vs/workbench/contrib/debug/browser/watchExpressionsView.ts
+7 ./src/vs/workbench/contrib/codeEditor/browser/menuPreventer.ts
+7 ./src/vs/workbench/contrib/chat/browser/codeBlockPart.ts
+7 ./src/vs/workbench/browser/parts/editor/editorPart.ts
+7 ./src/vs/workbench/browser/parts/editor/editorGroupView.ts
+7 ./src/vs/server/node/serverServices.ts
+7 ./src/vs/platform/windows/electron-main/windowsMainService.ts
+7 ./src/vs/platform/window/common/window.ts
+7 ./src/vs/platform/files/test/node/parcelWatcher.test.ts
+7 ./src/vs/platform/files/test/browser/indexedDBFileService.integrationTest.ts
+7 ./src/vs/editor/common/viewLayout/viewLineRenderer.ts
+7 ./src/vs/editor/common/standalone/standaloneEnums.ts
+7 ./src/vs/editor/browser/widget/diffEditor/components/diffEditorViewZones/inlineDiffDeletedCodeMargin.ts
+7 ./src/vs/editor/browser/viewParts/viewLinesGpu/viewLinesGpu.ts
+7 ./src/vs/base/parts/sandbox/common/electronTypes.ts
+7 ./src/vs/base/node/powershell.ts
+7 ./src/vs/base/common/scrollable.ts
+7 ./extensions/vscode-api-tests/src/singlefolder-tests/workspace.fs.test.ts
+7 ./extensions/typescript-language-features/src/configuration/configuration.ts
+6 ./src/vscode-dts/vscode.proposed.textSearchProvider.d.ts
+6 ./src/vs/workbench/services/userDataSync/browser/userDataSyncWorkbenchService.ts
+6 ./src/vs/workbench/services/themes/common/colorThemeData.ts
+6 ./src/vs/workbench/services/secrets/electron-browser/secretStorageService.ts
+6 ./src/vs/workbench/services/search/common/searchExtTypes.ts
+6 ./src/vs/workbench/contrib/typeHierarchy/browser/typeHierarchyPeek.ts
+6 ./src/vs/workbench/contrib/searchEditor/browser/searchEditorSerialization.ts
+6 ./src/vs/workbench/contrib/notebook/browser/services/notebookServiceImpl.ts
+6 ./src/vs/workbench/contrib/extensions/browser/extensionFeaturesTab.ts
+6 ./src/vs/workbench/contrib/debug/browser/variablesView.ts
+6 ./src/vs/workbench/contrib/comments/browser/commentNode.ts
+6 ./src/vs/workbench/contrib/codeEditor/browser/editorLineNumberMenu.ts
+6 ./src/vs/workbench/contrib/chat/browser/chatAttachmentWidgets.ts
+6 ./src/vs/workbench/contrib/callHierarchy/browser/callHierarchyPeek.ts
+6 ./src/vs/workbench/browser/parts/compositeBarActions.ts
+6 ./src/vs/workbench/browser/actions/workspaceCommands.ts
+6 ./src/vs/workbench/api/common/extHostChatAgents2.ts
+6 ./src/vs/platform/windows/electron-main/windows.ts
+6 ./src/vs/editor/contrib/multicursor/browser/multicursor.ts
+6 ./src/vs/editor/contrib/message/browser/messageController.ts
+6 ./src/vs/editor/common/config/editorConfigurationSchema.ts
+6 ./src/vs/editor/browser/viewParts/viewLines/viewLineOptions.ts
+6 ./src/vs/base/browser/ui/tree/tree.ts
+6 ./src/vs/base/browser/ui/tree/asyncDataTree.ts
+6 ./extensions/microsoft-authentication/src/extension.ts
+6 ./extensions/gide-coding-agent/src/ui/HealthDashboard.tsx
+
+Component directory structure:
+==============================
+
+State management patterns:
+==========================
+useState usage: 9 files
+useContext usage: 1 files
+Redux usage: 2 files
+Zustand usage: 1 files
+
+Component reusability assessment:
+=================================
+Potentially reusable components (imported in multiple files):
+1: imported in 125 files
+2: imported in 533 files

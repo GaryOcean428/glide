@@ -1,0 +1,35 @@
+Dependency Audit Results
+========================
+Date: Tue Jul 15 12:48:33 UTC 2025
+
+Using Yarn package manager
+yarn audit --level moderate
+yarn audit v1.22.22
+warning @types/windows-foreground-love@0.3.1: This is a stub types definition. windows-foreground-love provides its own type definitions, so you do not need this installed.
+warning @vscode/gulp-electron > gulp-vinyl-zip@2.5.0: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+warning @vscode/gulp-electron > rimraf@2.7.1: Rimraf versions prior to v4 are no longer supported
+warning @vscode/gulp-electron > temp > rimraf@2.6.3: Rimraf versions prior to v4 are no longer supported
+warning @vscode/gulp-electron > rimraf > glob@7.2.3: Glob versions prior to v9 are no longer supported
+warning @vscode/gulp-electron > temp > rimraf > glob@7.2.3: Glob versions prior to v9 are no longer supported
+warning @vscode/gulp-electron > vinyl-fs > glob-stream > glob@7.2.3: Glob versions prior to v9 are no longer supported
+warning @vscode/gulp-electron > @electron/get > global-agent > boolean@3.2.0: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+warning @vscode/gulp-electron > @electron/get > global-agent > roarr > boolean@3.2.0: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+warning @vscode/gulp-electron > rimraf > glob > inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+warning @vscode/gulp-electron > vinyl-fs > glob-stream > unique-stream > through2-filter@3.1.0: this package has been deprecated for breaking semver major
+warning @vscode/test-cli > mocha > glob@8.1.0: Glob versions prior to v9 are no longer supported
+warning @vscode/test-cli > mocha > glob > inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+warning @vscode/test-cli > c8 > test-exclude > glob@7.2.3: Glob versions prior to v9 are no longer supported
+warning asar@3.2.0: Please use @electron/asar moving forward.  There is no API change, just a package name change
+warning asar > glob@7.2.3: Glob versions prior to v9 are no longer supported
+warning asar > @types/glob > @types/minimatch@6.0.0: This is a stub types definition. minimatch provides its own type definitions, so you do not need this installed.
+warning bundlesize > glob@7.2.3: Glob versions prior to v9 are no longer supported
+warning bundlesize > brotli-size > iltorb@2.4.5: The zlib module provides APIs for brotli compression/decompression starting with Node.js v10.16.0, please use it over iltorb
+warning bundlesize > brotli-size > iltorb > npmlog@4.1.2: This package is no longer supported.
+warning bundlesize > brotli-size > iltorb > prebuild-install > npmlog@4.1.2: This package is no longer supported.
+warning bundlesize > brotli-size > iltorb > npmlog > gauge@2.7.4: This package is no longer supported.
+warning bundlesize > brotli-size > iltorb > npmlog > are-we-there-yet@1.1.7: This package is no longer supported.
+warning eslint-plugin-local@6.0.0: Since the coming of ESLint flat config file, you can specify local rules without the need of this package. For running ESLint rule unit tests, use eslint-rule-tester instead
+warning glob@5.0.15: Glob versions prior to v9 are no longer supported
+warning glob > inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+warning gulp > glob-watcher > chokidar > fsevents@1.2.13: Upgrade to fsevents v2 to mitigate potential security issues
+warning gulp > glob-watcher > anymatch > micromatch > snapdragon > source-map-resolve@0.5.3: See https://github.com/lydell/source-map-resolve#deprecated
