@@ -1,10 +1,5 @@
 name: Validate Deployment
-on: 
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
-  workflow_dispatch:
+on: [push, pull_request]
 
 jobs:
   validate:
@@ -18,14 +13,14 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.19.3'
-          cache: 'npm'
+          node-version: '22'
+          cache: 'yarn'
           
       - name: Install dependencies
-        run: npm install --ignore-scripts
+        run: yarn install --frozen-lockfile --ignore-engines
         
       - name: Run build validation
-        run: npm run compile
+        run: yarn build
         continue-on-error: false
         
       - name: Verify build output
@@ -33,7 +28,7 @@ jobs:
         continue-on-error: true
         
       - name: Run security audit
-        run: npm audit --audit-level high
+        run: yarn audit --severity high
         continue-on-error: true
         
       - name: Validate deployment configuration
@@ -49,7 +44,7 @@ jobs:
           echo "✅ Deployment configuration validated"
           
       - name: Test health check endpoint
-        run: npm run railway:health
+        run: yarn railway:health
         continue-on-error: true
         
       - name: Validate Railway scripts

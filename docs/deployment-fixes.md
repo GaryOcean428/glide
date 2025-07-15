@@ -1,5 +1,12 @@
 # GIDE Deployment Fixes Documentation
 
+## ES Module Fix Applied 2024-12-15
+
+- Node.js upgraded to v22 in CI pipeline  
+- Engine compatibility resolved for development requirements
+- Build process hardened with yarn package manager
+- Pre-deployment validation pipeline enhanced
+
 ## ES Module Fix Applied 2025-07-15
 
 ### Overview
