@@ -1,13 +1,14 @@
 [build]
-builder = "railpack"
-buildCommand = "npm run railway:build"
+buildCommand = "yarn build"
+nixpacksVersion = "1.29.1"
 watchPatterns = [
-  "/scripts/railway-server-production.mjs",
-  "/package.json"
+  "/scripts/railway-vscode-server.mjs",
+  "/package.json",
+  "/yarn.lock"
 ]
 
 [deploy]
-startCommand = "npm run railway:start"
+startCommand = "yarn start"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3

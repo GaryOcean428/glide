@@ -45,10 +45,9 @@ COPY scripts/railway-vscode-server.mjs scripts/
 COPY railway.json railway.toml ./
 
 # Install only essential dependencies without dev packages
-RUN npm config set fetch-retry-mintimeout 20000 && \
-    npm config set fetch-retry-maxtimeout 120000 && \
-    npm config set fetch-retries 5 && \
-    npm install --omit=optional --omit=dev --no-fund --no-audit
+RUN yarn config set network-retries 5 && \
+    yarn config set network-timeout 120000 && \
+    yarn install --production --frozen-lockfile --non-interactive
 
 # Make scripts executable
 RUN chmod +x scripts/railway-vscode-server.mjs
