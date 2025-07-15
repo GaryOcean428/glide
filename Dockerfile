@@ -47,7 +47,7 @@ COPY railway.json railway.toml ./
 # Install only essential dependencies without dev packages
 RUN yarn config set network-retries 5 && \
     yarn config set network-timeout 120000 && \
-    yarn install --production --frozen-lockfile --non-interactive
+    yarn install --production --frozen-lockfile --non-interactive --ignore-engines
 
 # Make scripts executable
 RUN chmod +x scripts/railway-vscode-server.mjs

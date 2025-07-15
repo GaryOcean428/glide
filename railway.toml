@@ -1,6 +1,17 @@
 [build]
 buildCommand = "yarn build"
 nixpacksVersion = "1.29.1"
+nixpacksPlan = {
+  phases = {
+    install = {
+      cmds = [
+        "yarn config set network-retries 5",
+        "yarn config set network-timeout 120000",
+        "yarn install --production --frozen-lockfile --ignore-engines"
+      ]
+    }
+  }
+}
 watchPatterns = [
   "/scripts/railway-vscode-server.mjs",
   "/package.json",
