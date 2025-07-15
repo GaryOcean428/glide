@@ -94,7 +94,15 @@
     "build-gide-extension": "./build-gide-extension.sh",
     "analyze-bundle": "webpack-bundle-analyzer out/vs/code/electron-main/main.js --port 8888",
     "bundle-size": "bundlesize",
-    "performance-check": "npm run bundle-size && echo '✅ Performance budget check passed'"
+    "performance-check": "npm run bundle-size && echo '✅ Performance budget check passed'",
+    "qa:health-check": "bash scripts/qa-audit/health-check.sh",
+    "qa:file-analysis": "bash scripts/qa-audit/file-system-analysis.sh",
+    "qa:duplication": "bash scripts/qa-audit/code-duplication-analysis.sh",
+    "qa:bundle-analysis": "bash scripts/qa-audit/bundle-analysis.sh",
+    "qa:component-audit": "bash scripts/qa-audit/component-architecture-audit.sh",
+    "qa:testing-setup": "bash scripts/qa-audit/testing-infrastructure-setup.sh",
+    "qa:cicd-optimization": "bash scripts/qa-audit/cicd-optimization.sh",
+    "qa:quick-analysis": "bash scripts/qa-audit/quick-analysis.sh"
   },
   "dependencies": {
     "@microsoft/1ds-core-js": "^3.2.13",

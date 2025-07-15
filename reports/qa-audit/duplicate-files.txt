@@ -1,0 +1,26 @@
+Duplicate Files Analysis
+=======================
+Date: Tue Jul 15 12:51:22 UTC 2025
+
+Scanning TypeScript and JavaScript files for duplicates...
+034442076c8d9265dbc5a8f834d435d8  ./extensions/typescript-language-features/src/test/smoke/index.ts
+06ab0151023e02a059b3df4b3fc31153  ./src/vs/platform/files/test/node/fixtures/resolver/examples/small.js
+101a8e001b505d29760bf63240febbb8  ./extensions/markdown-math/extension-browser.webpack.config.js
+185821c2338731ecc7d1faaf6012e47b  ./extensions/git-base/src/api/git-base.d.ts
+1d9739077f34b6dad3e0d8774350e574  ./extensions/github-authentication/src/browser/authServer.ts
+1db3f0e1d94e13de46c2a490cb2de13c  ./extensions/vscode-colorize-perf-tests/test/colorize-fixtures/test.ts
+20099db68e0669f9398858db8c423626  ./src/vs/platform/files/test/node/fixtures/resolver/examples/company.js
+38dbcf6420f84bd51dc473fa2c1f53c3  ./extensions/references-view/extension-browser.webpack.config.js
+4b7c46ee553c02e15764956bc213e12f  ./src/vs/platform/files/test/node/fixtures/resolver/examples/conway.js
+58841711b95740cc31ff3664cc47638d  ./extensions/grunt/extension.webpack.config.js
+5ea14677351b3c52ecfbbc9b3ddabdce  ./extensions/json-language-features/client/src/utils/hash.ts
+693b4a372c7efef68ab92443c499caa1  ./extensions/configuration-editing/src/typings/ref.d.ts
+86ddb3a006aef006d356c005b8be5151  ./extensions/markdown-language-features/preview-src/events.ts
+9cbc7c2a369923165f1f47aab58eb731  ./src/vs/platform/files/test/node/fixtures/resolver/examples/employee.js
+c62f11632b032e515f7a79edb0fceeab  ./extensions/debug-auto-launch/extension.webpack.config.js
+d41d8cd98f00b204e9800998ecf8427e  ./extensions/typescript-language-features/test-workspace/foo.ts
+da7a98f76ff76560970667760e20ffbb  ./extensions/markdown-math/extension.webpack.config.js
+e0620b2756a1908003d8c194ed0eb1a8  ./extensions/css-language-features/server/test/pathCompletionFixtures/.foo.js
+e9005dffc600401949cd7789dc14465f  ./extensions/typescript-language-features/src/utils/lazy.ts
+
+Total files analyzed: 5897
