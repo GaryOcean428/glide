@@ -18,6 +18,9 @@ vscode.db
 /.profile-oss
 /cli/target
 /cli/openssl
+
+# Railway environment backup
+.env.railway.backup
 .backup/
 
 # Package manager lock files - use yarn.lock instead
