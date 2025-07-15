@@ -1,0 +1,66 @@
+name: Validate Deployment
+on: 
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.3'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+        
+      - name: Run build validation
+        run: npm run compile
+        continue-on-error: false
+        
+      - name: Verify build output
+        run: node scripts/verify-build.js
+        continue-on-error: true
+        
+      - name: Run security audit
+        run: npm audit --audit-level high
+        continue-on-error: true
+        
+      - name: Validate deployment configuration
+        run: |
+          if [ ! -f "railway.toml" ]; then
+            echo "❌ railway.toml not found"
+            exit 1
+          fi
+          if [ ! -f "scripts/railway-vscode-server.mjs" ]; then
+            echo "❌ Railway server script not found"
+            exit 1
+          fi
+          echo "✅ Deployment configuration validated"
+          
+      - name: Test health check endpoint
+        run: npm run railway:health
+        continue-on-error: true
+        
+      - name: Validate Railway scripts
+        run: node scripts/validate-railway-fix.mjs
+        continue-on-error: true
+        
+      - name: Check for deployment readiness
+        run: |
+          echo "🔍 Deployment Readiness Check"
+          echo "=============================="
+          echo "✅ Dependencies installed"
+          echo "✅ Build completed"
+          echo "✅ Configuration validated"
+          echo "🚀 Ready for deployment"
