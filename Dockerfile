@@ -38,6 +38,7 @@ WORKDIR /app
 # Copy package files and build scripts needed for npm install
 COPY package*.json ./
 COPY build/npm/ ./build/npm/
+COPY build/.npmrc ./build/.npmrc
 
 # Copy application code before installing dependencies
 # This ensures all files are available when dependencies are installed
