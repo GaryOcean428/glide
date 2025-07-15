@@ -85,7 +85,10 @@
     "extensions-ci-pr": "node ./node_modules/gulp/bin/gulp.js extensions-ci-pr",
     "perf": "node scripts/code-perf.js",
     "update-build-ts-version": "yarn add typescript@next && tsc -p ./build/tsconfig.build.json",
-    "build-gide-extension": "./build-gide-extension.sh"
+    "build-gide-extension": "./build-gide-extension.sh",
+    "analyze-bundle": "webpack-bundle-analyzer out/vs/code/electron-main/main.js --port 8888",
+    "bundle-size": "bundlesize",
+    "performance-check": "npm run bundle-size && echo '✅ Performance budget check passed'"
   },
   "dependencies": {
     "@microsoft/1ds-core-js": "^3.2.13",
@@ -163,6 +166,7 @@
     "@webgpu/types": "^0.1.44",
     "ansi-colors": "^3.2.3",
     "asar": "^3.0.3",
+    "bundlesize": "^0.18.2",
     "chromium-pickle-js": "^0.2.0",
     "cookie": "^0.7.2",
     "copy-webpack-plugin": "^11.0.0",
@@ -228,6 +232,7 @@
     "typescript-eslint": "^8.8.0",
     "util": "^0.12.4",
     "webpack": "^5.94.0",
+    "webpack-bundle-analyzer": "^4.10.2",
     "webpack-cli": "^5.1.4",
     "webpack-stream": "^7.0.0",
     "xml2js": "^0.5.0",

@@ -1,0 +1,45 @@
+{
+  "files": [
+    {
+      "path": "out/vs/code/electron-main/main.js",
+      "maxSize": "500kb",
+      "compression": "gzip"
+    },
+    {
+      "path": "out/vs/workbench/workbench.web.main.js",
+      "maxSize": "300kb",
+      "compression": "gzip"
+    },
+    {
+      "path": "out/vs/workbench/workbench.desktop.main.js", 
+      "maxSize": "400kb",
+      "compression": "gzip"
+    },
+    {
+      "path": "out/vs/base/**/*.js",
+      "maxSize": "100kb",
+      "compression": "gzip"
+    }
+  ],
+  "budgets": [
+    {
+      "type": "bundle",
+      "maximumWarning": "500kb",
+      "maximumError": "1mb"
+    },
+    {
+      "type": "initial",
+      "maximumWarning": "300kb", 
+      "maximumError": "600kb"
+    },
+    {
+      "type": "all",
+      "maximumWarning": "2mb",
+      "maximumError": "5mb"
+    }
+  ],
+  "ci": {
+    "trackBranches": ["main", "develop"],
+    "repoBranchBase": "main"
+  }
+}
