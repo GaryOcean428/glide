@@ -39,15 +39,16 @@ WORKDIR /app
 COPY package*.json ./
 COPY build/npm/ ./build/npm/
 
+# Copy application code before installing dependencies
+# This ensures all files are available when dependencies are installed
+COPY scripts/railway-vscode-server.mjs scripts/
+COPY railway.json railway.toml ./
+
 # Install only essential dependencies without dev packages
 RUN npm config set fetch-retry-mintimeout 20000 && \
     npm config set fetch-retry-maxtimeout 120000 && \
     npm config set fetch-retries 5 && \
     npm install --omit=optional --omit=dev --no-fund --no-audit
-
-# Copy application code (minimal files needed)
-COPY scripts/railway-vscode-server.mjs scripts/
-COPY railway.json railway.toml ./
 
 # Make scripts executable
 RUN chmod +x scripts/railway-vscode-server.mjs
