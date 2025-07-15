@@ -26,6 +26,11 @@ This document details the fixes applied to resolve Railway deployment build erro
 - `PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true`
 - `NPM_CONFIG_OPTIONAL=false`
 
+### 4. ES Module/CommonJS Conflict
+**Problem**: Deployment fails with `ReferenceError: require is not defined in ES module scope` in the preinstall script.
+**Root Cause**: Root `package.json` has `"type": "module"` which forces ES module interpretation, but `build/npm/preinstall.js` uses CommonJS `require()` syntax.
+**Solution**: Added `build/npm/package.json` with `"type": "commonjs"` to override the root setting for that directory, ensuring preinstall and postinstall scripts are correctly interpreted as CommonJS modules.
+
 ## Files Modified
 
 ### Dockerfile
@@ -33,6 +38,10 @@ This document details the fixes applied to resolve Railway deployment build erro
 - Implemented robust UID conflict resolution
 - Changed health check binding from localhost to 0.0.0.0
 - Optimized npm install command
+
+### build/npm/package.json
+- Added with `"type": "commonjs"` to resolve ES module/CommonJS conflict
+- Ensures preinstall.js and postinstall.js are interpreted correctly
 
 ## Testing Results
 
@@ -42,6 +51,8 @@ This document details the fixes applied to resolve Railway deployment build erro
 ✅ **Health Endpoint**: Confirmed `/healthz` endpoint returns proper JSON response
 ✅ **Server Binding**: Validated server binds to 0.0.0.0 for external access
 ✅ **Build Process**: Confirmed railway:build script executes successfully
+✅ **ES Module Fix**: Verified preinstall.js and postinstall.js scripts parse correctly as CommonJS
+✅ **Module Compatibility**: Confirmed `require()` statements work correctly in build/npm directory
 
 ## Railway Configuration
 
