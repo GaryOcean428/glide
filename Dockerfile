@@ -38,7 +38,12 @@ WORKDIR /app
 # Copy package files and build scripts needed for npm install
 COPY package*.json ./
 COPY build/npm/ ./build/npm/
-COPY build/.npmrc ./build/.npmrc
+COPY build/.npmrc* ./build/
+RUN if [ ! -f ./build/.npmrc ]; then \
+    echo "registry=https://registry.npmjs.org/" > ./build/.npmrc && \
+    echo "package-lock=false" >> ./build/.npmrc && \
+    echo "save-exact=true" >> ./build/.npmrc; \
+fi
 
 # Copy application code before installing dependencies
 # This ensures all files are available when dependencies are installed
