@@ -1,6 +1,6 @@
 # Railway-optimized Node.js deployment with minimal dependencies
 # Use official Node.js image to avoid NodeSource installation issues
-FROM node:20-bookworm-slim
+FROM node:22-bookworm-slim
 
 # Set environment variables to skip native compilation
 ENV ELECTRON_SKIP_BINARY_DOWNLOAD=1 \
