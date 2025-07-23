@@ -1,8 +1,7 @@
-# Railway-optimized Node.js deployment with minimal dependencies
-# Use official Node.js image to avoid NodeSource installation issues
+# Railway-optimized Node.js deployment with native module support
 FROM node:22-bookworm-slim
 
-# Set environment variables to skip native compilation
+# Set environment variables to handle native modules and skip downloads
 ENV ELECTRON_SKIP_BINARY_DOWNLOAD=1 \
     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
     PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
@@ -11,7 +10,14 @@ ENV ELECTRON_SKIP_BINARY_DOWNLOAD=1 \
     DISABLE_UPDATE_CHECK=true \
     NODE_ENV=production \
     SKIP_NATIVE_MODULES=1 \
-    VSCODE_SKIP_NODE_VERSION_CHECK=1
+    VSCODE_SKIP_NODE_VERSION_CHECK=1 \
+    npm_config_target_platform=linux \
+    npm_config_arch=x64 \
+    npm_config_target_arch=x64 \
+    npm_config_disturl=https://nodejs.org/dist \
+    npm_config_runtime=node \
+    npm_config_devdir=/tmp/.node-gyp \
+    npm_config_build_from_source=false
 
 # Configure APT to prevent hangs and timeouts
 RUN echo 'Acquire::http::Timeout "30";' > /etc/apt/apt.conf.d/99timeout && \
@@ -22,40 +28,49 @@ RUN echo 'Acquire::http::Timeout "30";' > /etc/apt/apt.conf.d/99timeout && \
     echo 'Dpkg::Options "--force-confdef";' >> /etc/apt/apt.conf.d/99timeout && \
     echo 'Dpkg::Options "--force-confold";' >> /etc/apt/apt.conf.d/99timeout
 
-# Install system dependencies needed for native builds
+# Install system dependencies needed for native builds in multi-stage
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
     --no-install-recommends \
     curl \
     python3 \
+    python3-pip \
     make \
     g++ \
+    gcc \
+    libc6-dev \
+    pkg-config \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 WORKDIR /app
 
-# Copy package files and build scripts needed for npm install
+# Copy package files and build scripts
 COPY package*.json ./
 COPY build/npm/ ./build/npm/
-COPY build/.npmrc* ./build/
-RUN if [ ! -f ./build/.npmrc ]; then \
-    echo "registry=https://registry.npmjs.org/" > ./build/.npmrc && \
-    echo "package-lock=false" >> ./build/.npmrc && \
-    echo "save-exact=true" >> ./build/.npmrc; \
-fi
+COPY .npmrc ./
 
-# Copy application code before installing dependencies
-# This ensures all files are available when dependencies are installed
+# Copy essential scripts before dependency installation
 COPY scripts/railway-vscode-server.mjs scripts/
 COPY scripts/setup-env.js scripts/
 COPY scripts/verify-setup.js scripts/
 COPY railway.json railway.toml ./
 
-# Install only essential dependencies without dev packages
-RUN yarn config set network-retries 5 && \
-    yarn config set network-timeout 120000 && \
-    yarn install --production --frozen-lockfile --non-interactive --ignore-engines
+# Pre-configure npm for Railway environment
+RUN npm config set registry https://registry.npmjs.org/ && \
+    npm config set timeout 120000 && \
+    npm config set fetch-retries 5 && \
+    npm config set legacy-peer-deps true && \
+    npm config set optional false && \
+    npm config set target_platform linux && \
+    npm config set target_arch x64 && \
+    npm config set disturl https://nodejs.org/dist && \
+    npm config set runtime node && \
+    npm config set build_from_source false
+
+# Install dependencies with Railway-optimized configuration
+# Use npm instead of yarn for better native module handling
+RUN npm install --omit=dev --omit=optional --legacy-peer-deps --no-audit --no-fund --verbose
 
 # Make scripts executable
 RUN chmod +x scripts/railway-vscode-server.mjs
