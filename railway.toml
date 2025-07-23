@@ -1,13 +1,16 @@
 [build]
-buildCommand = "yarn build"
+buildCommand = "bash scripts/railway-build.sh"
 nixpacksVersion = "1.29.1"
 nixpacksPlan = {
   phases = {
     install = {
       cmds = [
-        "yarn config set network-retries 5",
-        "yarn config set network-timeout 120000",
-        "yarn install --production --frozen-lockfile --ignore-engines"
+        "npm config set registry https://registry.npmjs.org/",
+        "npm config set timeout 120000",
+        "npm config set fetch-retries 5",
+        "npm config set legacy-peer-deps true",
+        "npm config set optional false",
+        "npm install --omit=dev --omit=optional --legacy-peer-deps --no-audit --no-fund"
       ]
     }
   }
@@ -15,11 +18,11 @@ nixpacksPlan = {
 watchPatterns = [
   "/scripts/railway-vscode-server.mjs",
   "/package.json",
-  "/yarn.lock"
+  "/.npmrc"
 ]
 
 [deploy]
-startCommand = "yarn start"
+startCommand = "npm start"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
@@ -32,3 +35,8 @@ PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1"
 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
 NPM_CONFIG_OPTIONAL = "false"
 RAILPACK_PRUNE_DEPS = "false"
+npm_config_target_platform = "linux"
+npm_config_arch = "x64"
+npm_config_disturl = "https://nodejs.org/dist"
+npm_config_runtime = "node"
+npm_config_build_from_source = "false"
