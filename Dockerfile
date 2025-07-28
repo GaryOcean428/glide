@@ -56,17 +56,11 @@ COPY scripts/setup-env.js scripts/
 COPY scripts/verify-setup.js scripts/
 COPY railway.json railway.toml ./
 
-# Pre-configure npm for Railway environment
+# Pre-configure npm for Railway environment with only valid options
 RUN npm config set registry https://registry.npmjs.org/ && \
-    npm config set timeout 120000 && \
+    npm config set fetch-timeout 120000 && \
     npm config set fetch-retries 5 && \
-    npm config set legacy-peer-deps true && \
-    npm config set optional false && \
-    npm config set target_platform linux && \
-    npm config set target_arch x64 && \
-    npm config set disturl https://nodejs.org/dist && \
-    npm config set runtime node && \
-    npm config set build_from_source false
+    npm config set legacy-peer-deps true
 
 # Install dependencies with Railway-optimized configuration
 # Use npm instead of yarn for better native module handling
