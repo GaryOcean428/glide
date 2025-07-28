@@ -6,10 +6,9 @@ nixpacksPlan = {
     install = {
       cmds = [
         "npm config set registry https://registry.npmjs.org/",
-        "npm config set timeout 120000",
+        "npm config set fetch-timeout 120000",
         "npm config set fetch-retries 5",
         "npm config set legacy-peer-deps true",
-        "npm config set optional false",
         "npm install --omit=dev --omit=optional --legacy-peer-deps --no-audit --no-fund"
       ]
     }
