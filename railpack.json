@@ -1,0 +1,56 @@
+{
+  "$schema": "https://railway.com/railpack.schema.json",
+  "version": "1",
+  "metadata": {
+    "name": "glide-vscode-server",
+    "description": "VS Code fork with Gide AI coding agent extension"
+  },
+  "build": {
+    "provider": "node",
+    "nodeVersion": "22",
+    "steps": {
+      "setup": {
+        "commands": [
+          "npm config set registry https://registry.npmjs.org/",
+          "npm config set legacy-peer-deps true",
+          "npm config set fetch-timeout 180000",
+          "npm config set fetch-retries 5"
+        ]
+      },
+      "install": {
+        "commands": [
+          "npm install --omit=dev --omit=optional --legacy-peer-deps --verbose"
+        ]
+      },
+      "build": {
+        "commands": [
+          "npm run install-essentials",
+          "chmod +x scripts/railway-vscode-server.mjs"
+        ]
+      }
+    },
+    "env": {
+      "ELECTRON_SKIP_BINARY_DOWNLOAD": "1",
+      "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1",
+      "PUPPETEER_SKIP_CHROMIUM_DOWNLOAD": "true",
+      "NPM_CONFIG_OPTIONAL": "false",
+      "SKIP_NATIVE_MODULES": "1",
+      "NODE_ENV": "production",
+      "VSCODE_SKIP_NODE_VERSION_CHECK": "1"
+    }
+  },
+  "deploy": {
+    "startCommand": "node scripts/railway-vscode-server.mjs",
+    "healthCheckPath": "/healthz",
+    "healthCheckTimeout": 300,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 3,
+    "overlapSeconds": 30,
+    "drainingSeconds": 15,
+    "replicaCount": 2,
+    "resourceLimits": {
+      "memory": "2Gi",
+      "cpu": "1000m"
+    }
+  }
+}

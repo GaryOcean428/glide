@@ -1,0 +1,31 @@
+name: Railway Deployment
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install -g jq
+          jq '.' railpack.json > /dev/null
+          echo "✅ Configuration valid"
+      - run: node scripts/validate-models.js
+        env:
+          GIDE_MODEL_NAME: claude-sonnet-4-20250514  
+          GIDE_MODEL_PROVIDER: anthropic
+
+  deploy:
+    needs: validate
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest 
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Deploy to Railway triggered"
