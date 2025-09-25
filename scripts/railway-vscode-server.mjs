@@ -158,6 +158,22 @@ function createProxyServer(vsCodeProcess) {
             return;
         }
 
+        // Metrics endpoint for Railway monitoring
+        if (pathname === '/metrics') {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                memory: process.memoryUsage(),
+                uptime: process.uptime(),
+                version: process.version,
+                gide: {
+                    configured: !!process.env.GIDE_AGENT_ENDPOINT,
+                    model: process.env.GIDE_MODEL_NAME || 'not configured'
+                },
+                timestamp: new Date().toISOString()
+            }));
+            return;
+        }
+
         // Proxy all other requests to VS Code server
         const proxy = createProxyMiddleware({
             target: `http://127.0.0.1:${VSCODE_PORT}`,
