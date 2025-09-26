@@ -30,12 +30,30 @@ console.log('\n2️⃣ Checking Railway configuration files...');
 const railwayFiles = ['railway.json', 'railway.toml', 'railpack.json'];
 let railwayConfigValid = true;
 
+// Secure file path validation - only allow whitelisted configuration files in project root
+const projectRoot = path.resolve(__dirname, '..');
+const allowedFiles = new Set(['railway.json', 'railway.toml', 'railpack.json']);
+
 railwayFiles.forEach(file => {
-    const filePath = path.join(__dirname, '..', file);
+    // Validate that the file name is in our whitelist (security: prevent path traversal)
+    if (!allowedFiles.has(file)) {
+        console.log(`   ⚠️  File ${file} not in allowed configuration files`);
+        return;
+    }
+    
+    // Construct secure path and validate it's within project root
+    const filePath = path.resolve(projectRoot, file);
+    if (!filePath.startsWith(projectRoot)) {
+        console.log(`   ❌ ${file} path traversal detected, skipping`);
+        railwayConfigValid = false;
+        return;
+    }
+    
     if (fs.existsSync(filePath)) {
         try {
             if (file.endsWith('.json')) {
-                JSON.parse(fs.readFileSync(filePath, 'utf8'));
+                const content = fs.readFileSync(filePath, 'utf8');
+                JSON.parse(content);
             }
             console.log(`   ✅ ${file} exists and is valid`);
         } catch (error) {
@@ -52,27 +70,48 @@ allPassed = allPassed && railwayConfigValid;
 
 // Test 3: Verify Node.js configuration
 console.log('\n3️⃣ Checking Node.js configuration...');
-const railpackPath = path.join(__dirname, '..', 'railpack.json');
-const railpack = JSON.parse(fs.readFileSync(railpackPath, 'utf8'));
+const railpackPath = path.resolve(projectRoot, 'railpack.json');
 
-if (railpack.build?.provider === 'node') {
-    console.log('   ✅ Railpack configured for Node.js provider');
-} else {
-    console.log('   ❌ Railpack not configured for Node.js provider');
+// Security: Ensure path is within project root
+if (!railpackPath.startsWith(projectRoot)) {
+    console.log('   ❌ Security: railpack.json path traversal detected');
     allPassed = false;
-}
+} else if (fs.existsSync(railpackPath)) {
+    try {
+        const railpack = JSON.parse(fs.readFileSync(railpackPath, 'utf8'));
+        
+        if (railpack.build?.provider === 'node') {
+            console.log('   ✅ Railpack configured for Node.js provider');
+        } else {
+            console.log('   ❌ Railpack not configured for Node.js provider');
+            allPassed = false;
+        }
 
-if (railpack.deploy?.startCommand?.includes('node')) {
-    console.log('   ✅ Start command uses Node.js');
+        if (railpack.deploy?.startCommand?.includes('node')) {
+            console.log('   ✅ Start command uses Node.js');
+        } else {
+            console.log('   ❌ Start command does not use Node.js');
+            allPassed = false;
+        }
+    } catch (error) {
+        console.log(`   ❌ Error reading railpack.json: ${error.message}`);
+        allPassed = false;
+    }
 } else {
-    console.log('   ❌ Start command does not use Node.js');
+    console.log('   ❌ railpack.json not found');
     allPassed = false;
 }
 
 // Test 4: Verify Railway server script
 console.log('\n4️⃣ Checking Railway server script...');
-const serverScriptPath = path.join(__dirname, 'railway-vscode-server.mjs');
-if (fs.existsSync(serverScriptPath)) {
+const scriptsDir = path.resolve(__dirname);
+const serverScriptPath = path.resolve(scriptsDir, 'railway-vscode-server.mjs');
+
+// Security: Ensure script path is within scripts directory
+if (!serverScriptPath.startsWith(scriptsDir)) {
+    console.log('   ❌ Security: server script path traversal detected');
+    allPassed = false;
+} else if (fs.existsSync(serverScriptPath)) {
     console.log('   ✅ Railway server script exists');
     
     // Check script permissions
@@ -90,23 +129,38 @@ if (fs.existsSync(serverScriptPath)) {
 
 // Test 5: Verify critical dependencies
 console.log('\n5️⃣ Checking critical dependencies...');
-const packagePath = path.join(__dirname, '..', 'package.json');
-const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+const packagePath = path.resolve(projectRoot, 'package.json');
 
-const criticalDeps = [
-    '@vscode/test-web',
-    'http-proxy-middleware', 
-    'express'
-];
+// Security: Ensure package.json path is within project root
+if (!packagePath.startsWith(projectRoot)) {
+    console.log('   ❌ Security: package.json path traversal detected');
+    allPassed = false;
+} else if (fs.existsSync(packagePath)) {
+    try {
+        const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+        
+        const criticalDeps = [
+            '@vscode/test-web',
+            'http-proxy-middleware', 
+            'express'
+        ];
 
-criticalDeps.forEach(dep => {
-    if (pkg.dependencies[dep]) {
-        console.log(`   ✅ ${dep} in dependencies: ${pkg.dependencies[dep]}`);
-    } else {
-        console.log(`   ❌ ${dep} missing from dependencies`);
+        criticalDeps.forEach(dep => {
+            if (pkg.dependencies && pkg.dependencies[dep]) {
+                console.log(`   ✅ ${dep} in dependencies: ${pkg.dependencies[dep]}`);
+            } else {
+                console.log(`   ❌ ${dep} missing from dependencies`);
+                allPassed = false;
+            }
+        });
+    } catch (error) {
+        console.log(`   ❌ Error reading package.json: ${error.message}`);
         allPassed = false;
     }
-});
+} else {
+    console.log('   ❌ package.json not found');
+    allPassed = false;
+}
 
 // Test 6: Check environment variables configuration
 console.log('\n6️⃣ Checking environment variables...');
@@ -117,23 +171,38 @@ const expectedEnvVars = [
     'NPM_CONFIG_OPTIONAL'
 ];
 
-const railwayTomlPath = path.join(__dirname, '..', 'railway.toml');
-const railwayToml = fs.readFileSync(railwayTomlPath, 'utf8');
+const railwayTomlPath = path.resolve(projectRoot, 'railway.toml');
 
-expectedEnvVars.forEach(envVar => {
-    if (railwayToml.includes(envVar)) {
-        console.log(`   ✅ ${envVar} configured in railway.toml`);
-    } else {
-        console.log(`   ⚠️  ${envVar} not found in railway.toml`);
+// Security: Ensure railway.toml path is within project root
+if (!railwayTomlPath.startsWith(projectRoot)) {
+    console.log('   ❌ Security: railway.toml path traversal detected');
+    allPassed = false;
+} else if (fs.existsSync(railwayTomlPath)) {
+    try {
+        const railwayToml = fs.readFileSync(railwayTomlPath, 'utf8');
+
+        expectedEnvVars.forEach(envVar => {
+            if (railwayToml.includes(envVar)) {
+                console.log(`   ✅ ${envVar} configured in railway.toml`);
+            } else {
+                console.log(`   ⚠️  ${envVar} not found in railway.toml`);
+            }
+        });
+
+        // Test 7: Verify RAILPACK_PRUNE_DEPS setting
+        console.log('\n7️⃣ Checking RAILPACK_PRUNE_DEPS setting...');
+        if (railwayToml.includes('RAILPACK_PRUNE_DEPS = "false"')) {
+            console.log('   ✅ RAILPACK_PRUNE_DEPS set to false (prevents dependency pruning)');
+        } else {
+            console.log('   ❌ RAILPACK_PRUNE_DEPS not set to false');
+            allPassed = false;
+        }
+    } catch (error) {
+        console.log(`   ❌ Error reading railway.toml: ${error.message}`);
+        allPassed = false;
     }
-});
-
-// Test 7: Verify RAILPACK_PRUNE_DEPS setting
-console.log('\n7️⃣ Checking RAILPACK_PRUNE_DEPS setting...');
-if (railwayToml.includes('RAILPACK_PRUNE_DEPS = "false"')) {
-    console.log('   ✅ RAILPACK_PRUNE_DEPS set to false (prevents dependency pruning)');
 } else {
-    console.log('   ❌ RAILPACK_PRUNE_DEPS not set to false');
+    console.log('   ❌ railway.toml not found');
     allPassed = false;
 }
 
