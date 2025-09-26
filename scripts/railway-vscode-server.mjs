@@ -45,7 +45,7 @@ function startVSCodeServer() {
         
         const vsCodeArgs = [
             testWebLocation,
-            '--host', '127.0.0.1',
+            '--host', '0.0.0.0',
             '--port', VSCODE_PORT.toString(),
             '--browserType', 'none',
             '--sourcesPath', APP_ROOT,
