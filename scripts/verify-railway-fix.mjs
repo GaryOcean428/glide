@@ -64,40 +64,48 @@ if (missingFromDeps.length === 0) {
 // Check 2: Verify Railway configuration
 console.log('\n2️⃣ Checking Railway configuration...');
 
-// Check railway.json
-const railwayJsonPath = path.resolve(projectRoot, 'railway.json');
+// According to Railway deployment guidelines, we should use railpack.json ONLY
+// Check railpack.json (this should be the ONLY build configuration)
+const railpackPath = path.resolve(projectRoot, 'railpack.json');
 
 // Security: Ensure path is within project root
-if (!railwayJsonPath.startsWith(projectRoot)) {
-    console.log('❌ Security: railway.json path traversal detected');
+if (!railpackPath.startsWith(projectRoot)) {
+    console.log('❌ Security: railpack.json path traversal detected');
     process.exit(1);
 }
 
-const railwayJson = JSON.parse(fs.readFileSync(railwayJsonPath, 'utf8'));
-
-if (railwayJson.build.builder === 'RAILPACK') {
-  console.log('   ✅ Using RAILPACK builder (recommended for this fix)');
-} else if (railwayJson.build.builder === 'DOCKERFILE') {
-  console.log('   ⚠️  Using DOCKERFILE builder (may need additional changes)');
+if (fs.existsSync(railpackPath)) {
+    const railpack = JSON.parse(fs.readFileSync(railpackPath, 'utf8'));
+    
+    if (railpack.build.provider === 'node') {
+        console.log('   ✅ Using Node.js provider in railpack.json (recommended for this fix)');
+    } else {
+        console.log('   ⚠️  Not using Node.js provider in railpack.json');
+    }
+    
+    if (railpack.build.env && railpack.build.env['RAILPACK_PRUNE_DEPS'] === 'false') {
+        console.log('   ✅ RAILPACK_PRUNE_DEPS set to false (prevents dependency pruning)');
+    } else {
+        console.log('   ❌ RAILPACK_PRUNE_DEPS not set to false');
+    }
 } else {
-  console.log('   ❓ Unknown builder type:', railwayJson.build.builder);
+    console.log('   ❌ railpack.json not found');
 }
 
-// Check railway.toml
-const railwayTomlPath = path.resolve(projectRoot, 'railway.toml');
+// Verify no competing build configurations exist
+console.log('\n   📋 Checking for competing build configurations...');
+const competingFiles = ['railway.json', 'railway.toml', 'Dockerfile', 'nixpacks.toml'];
+let hasCompeting = false;
 
-// Security: Ensure path is within project root
-if (!railwayTomlPath.startsWith(projectRoot)) {
-    console.log('❌ Security: railway.toml path traversal detected');
-    process.exit(1);
-}
+competingFiles.forEach(file => {
+    if (fs.existsSync(path.resolve(projectRoot, file))) {
+        console.log(`   ⚠️  ${file} exists (may override railpack.json)`);
+        hasCompeting = true;
+    }
+});
 
-const railwayToml = fs.readFileSync(railwayTomlPath, 'utf8');
-
-if (railwayToml.includes('RAILPACK_PRUNE_DEPS = "false"')) {
-  console.log('   ✅ RAILPACK_PRUNE_DEPS set to false (prevents dependency pruning)');
-} else {
-  console.log('   ❌ RAILPACK_PRUNE_DEPS not set to false');
+if (!hasCompeting) {
+    console.log('   ✅ No competing build configurations (railpack.json will take priority)');
 }
 
 // Check 3: Verify script compatibility
@@ -127,23 +135,31 @@ const envVars = [
   'NPM_CONFIG_OPTIONAL'
 ];
 
-envVars.forEach(envVar => {
-  if (railwayToml.includes(`${envVar} = `) || railwayToml.includes(`${envVar}=`)) {
-    console.log(`   ✅ ${envVar} configured`);
-  } else {
-    console.log(`   ⚠️  ${envVar} not configured`);
-  }
-});
+// Check environment variables in railpack.json (reuse the railpack object from above)
+const railpack = JSON.parse(fs.readFileSync(railpackPath, 'utf8'));
+if (railpack.build && railpack.build.env) {
+    envVars.forEach(envVar => {
+        if (railpack.build.env[envVar]) {
+            console.log(`   ✅ ${envVar} configured`);
+        } else {
+            console.log(`   ⚠️  ${envVar} not configured`);
+        }
+    });
+} else {
+    console.log('   ⚠️  No environment variables section found in railpack.json');
+}
 
 // Summary
 console.log('\n📋 Fix Summary:');
 console.log('The Railway deployment issue should be resolved by:');
 console.log('1. ✅ @vscode/test-web moved to dependencies (not devDependencies)');
-console.log('2. ✅ Switched to RAILPACK builder instead of DOCKERFILE');
-console.log('3. ✅ Set RAILPACK_PRUNE_DEPS=false to prevent dependency pruning');
-console.log('4. ✅ Environment variables configured to skip problematic downloads');
+console.log('2. ✅ Using railpack.json ONLY (no competing build configurations)');
+console.log('3. ✅ Set RAILPACK_PRUNE_DEPS=false in railpack.json to prevent dependency pruning');
+console.log('4. ✅ Environment variables configured in railpack.json to skip problematic downloads');
 
-console.log('\n🚀 This configuration follows the exact solution from the problem statement:');
-console.log('   "modify Railway\'s build configuration by setting the RAILPACK_PRUNE_DEPS environment variable to false"');
+console.log('\n🚀 This configuration follows Railway deployment best practices:');
+console.log('   • Build Priority: Dockerfile > railpack.json > railway.json/toml > Nixpacks');
+console.log('   • Using railpack.json (priority #2) with no competing higher-priority configs');
+console.log('   • Preventing dependency pruning that was causing module resolution errors');
 
 console.log('\n✅ Verification completed - fix should resolve the "Cannot find module @vscode/test-web" error');

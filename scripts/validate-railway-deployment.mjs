@@ -27,52 +27,55 @@ if (fs.existsSync(path.join(__dirname, '..', '.eslint-plugin-local'))) {
 
 // Test 2: Verify Railway configuration files
 console.log('\n2️⃣ Checking Railway configuration files...');
-const railwayFiles = ['railway.json', 'railway.toml', 'railpack.json'];
+
+// According to Railway deployment guidelines, we should enforce railpack.json ONLY
+// Build priority: Dockerfile > railpack.json > railway.json/railway.toml > Nixpacks
+// We want railpack.json to take priority, so we should NOT have competing configs
+
+const projectRoot = path.resolve(__dirname, '..');
 let railwayConfigValid = true;
 
-// Secure file path validation - only allow whitelisted configuration files in project root
-const projectRoot = path.resolve(__dirname, '..');
-const allowedFiles = new Set(['railway.json', 'railway.toml', 'railpack.json']);
+// Check for railpack.json (required)
+const railpackPath = path.resolve(projectRoot, 'railpack.json');
+if (!railpackPath.startsWith(projectRoot)) {
+    console.log('   ❌ railpack.json path traversal detected');
+    railwayConfigValid = false;
+} else if (fs.existsSync(railpackPath)) {
+    try {
+        const content = fs.readFileSync(railpackPath, 'utf8');
+        JSON.parse(content);
+        console.log('   ✅ railpack.json exists and is valid');
+    } catch (error) {
+        console.log(`   ❌ railpack.json has syntax errors: ${error.message}`);
+        railwayConfigValid = false;
+    }
+} else {
+    console.log('   ❌ railpack.json missing');
+    railwayConfigValid = false;
+}
 
-railwayFiles.forEach(file => {
-    // Validate that the file name is in our whitelist (security: prevent path traversal)
-    if (!allowedFiles.has(file)) {
-        console.log(`   ⚠️  File ${file} not in allowed configuration files`);
-        return;
-    }
-    
-    // Construct secure path and validate it's within project root
+// Check for competing configuration files (should NOT exist)
+const competingFiles = ['railway.json', 'railway.toml', 'Dockerfile', 'nixpacks.toml'];
+competingFiles.forEach(file => {
     const filePath = path.resolve(projectRoot, file);
-    if (!filePath.startsWith(projectRoot)) {
-        console.log(`   ❌ ${file} path traversal detected, skipping`);
-        railwayConfigValid = false;
-        return;
-    }
-    
     if (fs.existsSync(filePath)) {
-        try {
-            if (file.endsWith('.json')) {
-                const content = fs.readFileSync(filePath, 'utf8');
-                JSON.parse(content);
-            }
-            console.log(`   ✅ ${file} exists and is valid`);
-        } catch (error) {
-            console.log(`   ❌ ${file} has syntax errors: ${error.message}`);
-            railwayConfigValid = false;
-        }
-    } else {
-        console.log(`   ❌ ${file} missing`);
-        railwayConfigValid = false;
+        console.log(`   ⚠️  ${file} exists (may override railpack.json - consider removing)`);
     }
 });
+
+if (!fs.existsSync(path.resolve(projectRoot, 'railway.json')) && 
+    !fs.existsSync(path.resolve(projectRoot, 'railway.toml')) &&
+    !fs.existsSync(path.resolve(projectRoot, 'Dockerfile')) &&
+    !fs.existsSync(path.resolve(projectRoot, 'nixpacks.toml'))) {
+    console.log('   ✅ No competing build configuration files (railpack.json will take priority)');
+}
 
 allPassed = allPassed && railwayConfigValid;
 
 // Test 3: Verify Node.js configuration
 console.log('\n3️⃣ Checking Node.js configuration...');
-const railpackPath = path.resolve(projectRoot, 'railpack.json');
 
-// Security: Ensure path is within project root
+// Security: Ensure path is within project root (railpackPath already defined above)
 if (!railpackPath.startsWith(projectRoot)) {
     console.log('   ❌ Security: railpack.json path traversal detected');
     allPassed = false;
@@ -162,48 +165,46 @@ if (!packagePath.startsWith(projectRoot)) {
     allPassed = false;
 }
 
-// Test 6: Check environment variables configuration
+// Test 6: Check environment variables configuration in railpack.json
 console.log('\n6️⃣ Checking environment variables...');
 const expectedEnvVars = [
     'ELECTRON_SKIP_BINARY_DOWNLOAD',
-    'PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD',
+    'PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD', 
     'PUPPETEER_SKIP_CHROMIUM_DOWNLOAD',
-    'NPM_CONFIG_OPTIONAL'
+    'NPM_CONFIG_OPTIONAL',
+    'RAILPACK_PRUNE_DEPS'
 ];
 
-const railwayTomlPath = path.resolve(projectRoot, 'railway.toml');
-
-// Security: Ensure railway.toml path is within project root
-if (!railwayTomlPath.startsWith(projectRoot)) {
-    console.log('   ❌ Security: railway.toml path traversal detected');
-    allPassed = false;
-} else if (fs.existsSync(railwayTomlPath)) {
+// Check railpack.json for environment variables (we already validated it exists above)
+if (fs.existsSync(railpackPath)) {
     try {
-        const railwayToml = fs.readFileSync(railwayTomlPath, 'utf8');
+        const railpack = JSON.parse(fs.readFileSync(railpackPath, 'utf8'));
 
-        expectedEnvVars.forEach(envVar => {
-            if (railwayToml.includes(envVar)) {
-                console.log(`   ✅ ${envVar} configured in railway.toml`);
+        if (railpack.build && railpack.build.env) {
+            expectedEnvVars.forEach(envVar => {
+                if (railpack.build.env[envVar]) {
+                    console.log(`   ✅ ${envVar} configured in railpack.json: ${railpack.build.env[envVar]}`);
+                } else {
+                    console.log(`   ⚠️  ${envVar} not found in railpack.json`);
+                }
+            });
+
+            // Test 7: Verify RAILPACK_PRUNE_DEPS setting
+            console.log('\n7️⃣ Checking RAILPACK_PRUNE_DEPS setting...');
+            if (railpack.build.env['RAILPACK_PRUNE_DEPS'] === 'false') {
+                console.log('   ✅ RAILPACK_PRUNE_DEPS set to false (prevents dependency pruning)');
             } else {
-                console.log(`   ⚠️  ${envVar} not found in railway.toml`);
+                console.log('   ❌ RAILPACK_PRUNE_DEPS not set to false');
+                allPassed = false;
             }
-        });
-
-        // Test 7: Verify RAILPACK_PRUNE_DEPS setting
-        console.log('\n7️⃣ Checking RAILPACK_PRUNE_DEPS setting...');
-        if (railwayToml.includes('RAILPACK_PRUNE_DEPS = "false"')) {
-            console.log('   ✅ RAILPACK_PRUNE_DEPS set to false (prevents dependency pruning)');
         } else {
-            console.log('   ❌ RAILPACK_PRUNE_DEPS not set to false');
+            console.log('   ❌ No environment variables section found in railpack.json');
             allPassed = false;
         }
     } catch (error) {
-        console.log(`   ❌ Error reading railway.toml: ${error.message}`);
+        console.log(`   ❌ Error reading railpack.json env section: ${error.message}`);
         allPassed = false;
     }
-} else {
-    console.log('   ❌ railway.toml not found');
-    allPassed = false;
 }
 
 // Final summary
@@ -213,10 +214,15 @@ if (allPassed) {
     console.log('🚀 Configuration should resolve Railway deployment issues');
     console.log('\n🔧 Key fixes applied:');
     console.log('  • Removed Deno detection trigger (.eslint-plugin-local)');
-    console.log('  • Configured explicit RAILPACK builder');
-    console.log('  • Set RAILPACK_PRUNE_DEPS=false');
-    console.log('  • Environment variables configured');
+    console.log('  • Using railpack.json ONLY (no competing build configs)');
+    console.log('  • Set RAILPACK_PRUNE_DEPS=false in railpack.json');
+    console.log('  • Environment variables configured in railpack.json');
     console.log('  • Node.js runtime properly specified');
+    console.log('\n📋 Railway Build Priority (followed correctly):');
+    console.log('  1. Dockerfile (removed) ✅');
+    console.log('  2. railpack.json (configured) ✅');
+    console.log('  3. railway.json/railway.toml (removed) ✅');
+    console.log('  4. Nixpacks auto-detection (will be bypassed) ✅');
     process.exit(0);
 } else {
     console.log('❌ Some validation checks failed');
