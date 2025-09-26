@@ -9,7 +9,7 @@ import tseslint from 'typescript-eslint';
 import { fileURLToPath } from 'url';
 
 import stylisticTs from '@stylistic/eslint-plugin-ts';
-import pluginLocal from 'eslint-plugin-local';
+import pluginLocal from './.eslint-plugin-local-backup/index.js';
 import pluginJsdoc from 'eslint-plugin-jsdoc';
 
 import pluginHeader from 'eslint-plugin-header';
@@ -26,7 +26,7 @@ export default tseslint.config(
 	{
 		ignores: [
 			...ignores,
-			'!**/.eslint-plugin-local/**/*'
+			'!**/.eslint-plugin-local-backup/**/*'
 		],
 	},
 	// All files (JS and TS)
