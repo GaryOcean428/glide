@@ -41,6 +41,8 @@
     "verify-build": "node scripts/verify-build.mjs",
     "validate-deployment": "node scripts/validate-deployment.js",
     "validate-railway-fix": "node scripts/validate-railway-fix.mjs",
+    "validate-railway-deployment": "node scripts/validate-railway-deployment.mjs",
+    "pre-deploy-validation": "node scripts/validate-railway-deployment.mjs",
     "pre-deploy-check": "node scripts/pre-deploy-check.js",
     "audit-and-fix": "npm audit --audit-level high && npm audit fix --force",
     "security-audit": "npm audit --audit-level moderate",
