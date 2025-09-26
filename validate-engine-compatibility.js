@@ -60,63 +60,59 @@ function testYarnrc() {
     }
 }
 
-// Test 3: Check Dockerfile has --ignore-engines flag
-function testDockerfile() {
-    console.log('\n3. Testing Dockerfile optimization...');
+// Test 3: Check Railway build configuration follows deployment guidelines
+function testRailwayConfig() {
+    console.log('\n3. Testing Railway build configuration...');
     
-    if (fs.existsSync('Dockerfile')) {
-        const content = fs.readFileSync('Dockerfile', 'utf8');
-        
-        if (content.includes('--ignore-engines')) {
-            console.log('   ✅ Dockerfile contains --ignore-engines flag');
-        } else {
-            console.log('   ❌ Dockerfile missing --ignore-engines flag');
+    // According to Railway deployment guidelines, we should use railpack.json ONLY
+    // Check for railpack.json (should exist)
+    if (fs.existsSync('railpack.json')) {
+        try {
+            const railpack = JSON.parse(fs.readFileSync('railpack.json', 'utf8'));
+            
+            if (railpack.build?.provider === 'node') {
+                console.log('   ✅ railpack.json configured with Node.js provider');
+            } else {
+                console.log('   ❌ railpack.json missing Node.js provider');
+                return false;
+            }
+            
+            if (railpack.build?.env?.['RAILPACK_PRUNE_DEPS'] === 'false') {
+                console.log('   ✅ railpack.json has RAILPACK_PRUNE_DEPS=false');
+            } else {
+                console.log('   ❌ railpack.json missing RAILPACK_PRUNE_DEPS=false');
+                return false;
+            }
+        } catch (error) {
+            console.log('   ❌ railpack.json syntax error');
             return false;
         }
-        
-        if (content.includes('--production')) {
-            console.log('   ✅ Dockerfile uses production install');
-        } else {
-            console.log('   ⚠️ Dockerfile not using production install');
-        }
-        
-        return true;
     } else {
-        console.log('   ❌ Dockerfile not found');
+        console.log('   ❌ railpack.json not found');
         return false;
     }
-}
-
-// Test 4: Check railway.toml has engine bypass
-function testRailwayToml() {
-    console.log('\n4. Testing Railway build configuration...');
     
-    if (fs.existsSync('railway.toml')) {
-        const content = fs.readFileSync('railway.toml', 'utf8');
-        
-        if (content.includes('--ignore-engines')) {
-            console.log('   ✅ railway.toml contains engine bypass');
-        } else {
-            console.log('   ❌ railway.toml missing engine bypass');
-            return false;
+    // Check that competing build configs don't exist (following deployment guidelines)
+    const competingFiles = ['Dockerfile', 'railway.toml', 'railway.json', 'nixpacks.toml'];
+    let hasCompeting = false;
+    
+    competingFiles.forEach(file => {
+        if (fs.existsSync(file)) {
+            console.log(`   ⚠️  ${file} exists (may override railpack.json)`);
+            hasCompeting = true;
         }
-        
-        if (content.includes('nixpacksPlan')) {
-            console.log('   ✅ railway.toml has custom install commands');
-        } else {
-            console.log('   ⚠️ railway.toml missing custom install commands');
-        }
-        
-        return true;
-    } else {
-        console.log('   ❌ railway.toml not found');
-        return false;
+    });
+    
+    if (!hasCompeting) {
+        console.log('   ✅ No competing build configurations (railpack.json will take priority)');
     }
+    
+    return !hasCompeting;
 }
 
-// Test 5: Check package.json dependencies structure
+// Test 4: Check package.json dependencies structure
 function testPackageJson() {
-    console.log('\n5. Testing dependency audit...');
+    console.log('\n4. Testing dependency audit...');
     
     try {
         const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
@@ -152,8 +148,7 @@ async function runTests() {
     const tests = [
         testYarnrcYml,
         testYarnrc,
-        testDockerfile,
-        testRailwayToml,
+        testRailwayConfig,
         testPackageJson
     ];
     
@@ -181,10 +176,11 @@ async function runTests() {
     console.log(`📈 Success Rate: ${Math.round((passed / (passed + failed)) * 100)}%`);
     
     if (failed === 0) {
-        console.log('\n🎉 All tests passed! Engine compatibility fixes implemented.');
+        console.log('\n🎉 All tests passed! Engine compatibility and Railway deployment configured correctly.');
         console.log('   - Engine warnings should be suppressed');
-        console.log('   - Production build will exclude dev dependencies');
-        console.log('   - Build process hardened for Railway deployment');
+        console.log('   - Production build will exclude dev dependencies'); 
+        console.log('   - Railway deployment using railpack.json ONLY (no competing configs)');
+        console.log('   - Build process hardened following deployment guidelines');
     } else {
         console.log('\n⚠️  Some tests failed. Please review the issues above.');
     }
