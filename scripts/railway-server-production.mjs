@@ -30,7 +30,7 @@ const logger = {
 const port = validatePort(process.env.PORT) || 8080;
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const appRoot = path.join(__dirname, '..');
+const appRoot = path.resolve(__dirname, '..');
 
 /**
  * Validates port number for security

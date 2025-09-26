@@ -14,9 +14,19 @@ const require = createRequire(import.meta.url);
 
 console.log('🔍 Verifying Railway Deployment Fix...\n');
 
+// Establish secure project root path
+const projectRoot = path.resolve(__dirname, '..');
+
 // Check 1: Verify package.json configuration
 console.log('1️⃣ Checking package.json configuration...');
-const packagePath = path.join(__dirname, '..', 'package.json');
+const packagePath = path.resolve(projectRoot, 'package.json');
+
+// Security: Ensure path is within project root
+if (!packagePath.startsWith(projectRoot)) {
+    console.log('❌ Security: package.json path traversal detected');
+    process.exit(1);
+}
+
 const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
 
 const testWebInDeps = packageJson.dependencies && packageJson.dependencies['@vscode/test-web'];
@@ -55,7 +65,14 @@ if (missingFromDeps.length === 0) {
 console.log('\n2️⃣ Checking Railway configuration...');
 
 // Check railway.json
-const railwayJsonPath = path.join(__dirname, '..', 'railway.json');
+const railwayJsonPath = path.resolve(projectRoot, 'railway.json');
+
+// Security: Ensure path is within project root
+if (!railwayJsonPath.startsWith(projectRoot)) {
+    console.log('❌ Security: railway.json path traversal detected');
+    process.exit(1);
+}
+
 const railwayJson = JSON.parse(fs.readFileSync(railwayJsonPath, 'utf8'));
 
 if (railwayJson.build.builder === 'RAILPACK') {
@@ -67,7 +84,14 @@ if (railwayJson.build.builder === 'RAILPACK') {
 }
 
 // Check railway.toml
-const railwayTomlPath = path.join(__dirname, '..', 'railway.toml');
+const railwayTomlPath = path.resolve(projectRoot, 'railway.toml');
+
+// Security: Ensure path is within project root
+if (!railwayTomlPath.startsWith(projectRoot)) {
+    console.log('❌ Security: railway.toml path traversal detected');
+    process.exit(1);
+}
+
 const railwayToml = fs.readFileSync(railwayTomlPath, 'utf8');
 
 if (railwayToml.includes('RAILPACK_PRUNE_DEPS = "false"')) {
