@@ -38,14 +38,14 @@
     }
   },
   "deploy": {
-    "startCommand": "yarn start",
+    "startCommand": "node scripts/railway-vscode-server.mjs",
     "healthCheckPath": "/api/health",
     "healthCheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3,
     "overlapSeconds": 30,
     "drainingSeconds": 15,
-    "replicaCount": 2,
+    "replicaCount": 1,
     "resourceLimits": {
       "memory": "2Gi",
       "cpu": "1000m"
