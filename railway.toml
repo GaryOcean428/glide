@@ -1,0 +1,43 @@
+# Railway Configuration
+# Native Railway format to replace railpack.json
+
+[build]
+builder = "NIXPACKS"
+
+[build.nixpacksConfig]
+install = "npm install --omit=dev --legacy-peer-deps"
+
+[deploy]
+startCommand = "node scripts/railway-vscode-server.mjs"
+healthcheckPath = "/healthz"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+
+[deploy.replicas]
+min = 1
+max = 2
+
+# Environment variables for build
+[[envs]]
+name = "NODE_ENV"
+value = "production"
+
+[[envs]]
+name = "ELECTRON_SKIP_BINARY_DOWNLOAD"
+value = "1"
+
+[[envs]]
+name = "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD"
+value = "1"
+
+[[envs]]
+name = "PUPPETEER_SKIP_CHROMIUM_DOWNLOAD"
+value = "true"
+
+[[envs]]
+name = "NPM_CONFIG_OPTIONAL"
+value = "false"
+
+[[envs]]
+name = "VSCODE_SKIP_NODE_VERSION_CHECK"
+value = "1"
