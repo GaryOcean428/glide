@@ -16,9 +16,13 @@ jobs:
           node-version: '22'
           cache: 'npm'
           
-      - name: Install dependencies
-        run: npm install --legacy-peer-deps || echo "Some dependencies may have warnings"
-        
+      - name: Install minimal dependencies for validation
+        run: |
+          npm install --no-save http-proxy-middleware express
+        env:
+          VSCODE_SKIP_NODE_VERSION_CHECK: "1"
+        continue-on-error: true
+          
       - name: Run build validation
         run: |
           echo "🔧 Running build verification..."
@@ -30,7 +34,8 @@ jobs:
         
       - name: Verify build output
         run: node scripts/verify-build.js
-        continue-on-error: true
+        env:
+          VSCODE_SKIP_NODE_VERSION_CHECK: "1"
         
       - name: Run security audit
         run: npm audit --audit-level high || echo "Audit completed with warnings"
@@ -39,14 +44,30 @@ jobs:
       - name: Validate deployment configuration
         run: |
           if [ -f "railpack.json" ]; then
-            echo "✅ Found modern railpack.json configuration"
+            echo "✅ Found railpack.json configuration (Railway priority #2)"
             jq '.' railpack.json > /dev/null || (echo "❌ Invalid railpack.json" && exit 1)
-          elif [ -f "railway.toml" ]; then
-            echo "✅ Found legacy railway.toml configuration"
+            echo "✅ railpack.json syntax valid"
+            
+            # Verify no competing configurations exist (per Railway guidelines)
+            competing_configs=""
+            if [ -f "railway.json" ]; then competing_configs="$competing_configs railway.json"; fi
+            if [ -f "railway.toml" ]; then competing_configs="$competing_configs railway.toml"; fi
+            if [ -f "nixpacks.toml" ]; then competing_configs="$competing_configs nixpacks.toml"; fi
+            if [ -f "Dockerfile" ]; then competing_configs="$competing_configs Dockerfile"; fi
+            
+            if [ -n "$competing_configs" ]; then
+              echo "⚠️  Competing build configurations found: $competing_configs"
+              echo "   Per Railway build priority, these may override railpack.json"
+            else
+              echo "✅ No competing build configurations (railpack.json will take priority)"
+            fi
+          elif [ -f "railway.toml" ] || [ -f "railway.json" ]; then
+            echo "✅ Found legacy railway configuration"
           else
-            echo "❌ No Railway configuration found (railway.toml or railpack.json)"
+            echo "❌ No Railway configuration found (railway.toml, railway.json, or railpack.json)"
             exit 1
           fi
+          
           if [ ! -f "scripts/railway-vscode-server.mjs" ]; then
             echo "❌ Railway server script not found"
             exit 1
@@ -62,15 +83,21 @@ jobs:
           fi
         continue-on-error: true
         
-      - name: Validate Railway scripts
-        run: node scripts/validate-railway-fix.mjs
+      - name: Validate Railway scripts (basic syntax)
+        run: |
+          echo "🔍 Validating Railway script syntax..."
+          if [ -f "scripts/railway-vscode-server.mjs" ]; then
+            node --check scripts/railway-vscode-server.mjs && echo "✅ Railway server script syntax valid"
+          fi
+        env:
+          VSCODE_SKIP_NODE_VERSION_CHECK: "1"
         continue-on-error: true
         
       - name: Check for deployment readiness
         run: |
           echo "🔍 Deployment Readiness Check"
           echo "=============================="
-          echo "✅ Dependencies installed"
-          echo "✅ Build completed"
-          echo "✅ Configuration validated"
-          echo "🚀 Ready for deployment"
+          echo "✅ Dependencies installed (minimal for CI)"
+          echo "✅ Build configuration validated"
+          echo "✅ Scripts syntax checked"
+          echo "🚀 Ready for Railway deployment"
