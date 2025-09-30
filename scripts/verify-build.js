@@ -77,12 +77,14 @@ function checkDeploymentFiles() {
     console.log('\n3. Checking deployment files...');
     
     const criticalFiles = [
-        'railway.toml',
+        'railpack.json',
         'scripts/railway-vscode-server.mjs'
     ];
     
     const optionalFiles = [
         'Dockerfile',
+        'railway.toml',
+        'nixpacks.toml',
         'start.sh'
     ];
     
