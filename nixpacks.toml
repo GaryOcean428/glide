@@ -2,7 +2,7 @@
 providers = ["node"]
 
 [phases.setup]
-nixPkgs = ["nodejs-22_x", "yarn", "python3", "gcc", "gnumake"]
+nixPkgs = ["nodejs_22", "yarn", "python3", "gcc", "gnumake"]
 
 [phases.install]
 cmd = "corepack enable && corepack prepare yarn@4.9.2 --activate && yarn install --frozen-lockfile"
