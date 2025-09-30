@@ -1,5 +1,5 @@
-[providers]
-nodejs = "22"
+# Force Node.js detection and prevent Deno
+providers = ["node"]
 
 [phases.setup]
 nixPkgs = ["nodejs-22_x", "yarn", "python3", "gcc", "gnumake"]
