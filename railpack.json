@@ -11,20 +11,17 @@
     "steps": {
       "setup": {
         "commands": [
-          "npm config set registry https://registry.npmjs.org/",
-          "npm config set legacy-peer-deps true",
-          "npm config set fetch-timeout 180000",
-          "npm config set fetch-retries 5"
+          "corepack enable && corepack prepare yarn@4.9.2 --activate"
         ]
       },
       "install": {
         "commands": [
-          "npm install --omit=dev --omit=optional --legacy-peer-deps --verbose"
+          "yarn install --frozen-lockfile"
         ]
       },
       "build": {
         "commands": [
-          "npm run install-essentials",
+          "yarn build",
           "chmod +x scripts/railway-vscode-server.mjs"
         ]
       }
@@ -41,8 +38,8 @@
     }
   },
   "deploy": {
-    "startCommand": "node scripts/railway-vscode-server.mjs",
-    "healthCheckPath": "/healthz",
+    "startCommand": "yarn start",
+    "healthCheckPath": "/api/health",
     "healthCheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3,

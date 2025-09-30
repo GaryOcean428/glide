@@ -26,10 +26,6 @@ reports/
 .env.railway.backup
 .backup/
 
-# Railway deployment artifacts
-.railway/
-.nixpacks/
-
 # Package manager lock files - use yarn.lock instead
 package-lock.json
 */package-lock.json
