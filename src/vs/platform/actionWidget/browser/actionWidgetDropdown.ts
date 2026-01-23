@@ -6,7 +6,7 @@
 import { IActionWidgetService } from './actionWidget.js';
 import { IAction } from '../../../base/common/actions.js';
 import { BaseDropdown, IActionProvider, IBaseDropdownOptions } from '../../../base/browser/ui/dropdown/dropdown.js';
-import { ActionListItemKind, IActionListDelegate, IActionListItem } from './actionList.js';
+import { ActionListItemKind, IActionListDelegate, IActionListItem, IActionListItemHover } from './actionList.js';
 import { ThemeIcon } from '../../../base/common/themables.js';
 import { Codicon } from '../../../base/common/codicons.js';
 import { getActiveElement, isHTMLElement } from '../../../base/browser/dom.js';
@@ -14,8 +14,17 @@ import { IKeybindingService } from '../../keybinding/common/keybinding.js';
 import { IListAccessibilityProvider } from '../../../base/browser/ui/list/listWidget.js';
 
 export interface IActionWidgetDropdownAction extends IAction {
-	category?: { label: string; order: number };
+	category?: { label: string; order: number; showHeader?: boolean };
+	icon?: ThemeIcon;
 	description?: string;
+	/**
+	 * Optional flyout hover configuration shown when focusing/hovering over the action.
+	 */
+	hover?: IActionListItemHover;
+	/**
+	 * Optional toolbar actions shown when the item is focused or hovered.
+	 */
+	toolbarActions?: IAction[];
 }
 
 // TODO @lramos15 - Should we just make IActionProvider templated?
@@ -32,6 +41,9 @@ export interface IActionWidgetDropdownOptions extends IBaseDropdownOptions {
 	readonly actionBarActions?: IAction[];
 	readonly actionBarActionProvider?: IActionProvider;
 	readonly showItemKeybindings?: boolean;
+
+	// Function that returns the anchor element for the dropdown
+	getAnchor?: () => HTMLElement;
 }
 
 /**
@@ -39,6 +51,9 @@ export interface IActionWidgetDropdownOptions extends IBaseDropdownOptions {
  * The benefits of this include non native features such as headers, descriptions, icons, and button bar
  */
 export class ActionWidgetDropdown extends BaseDropdown {
+
+	private enabled: boolean = true;
+
 	constructor(
 		container: HTMLElement,
 		private readonly _options: IActionWidgetDropdownOptions,
@@ -49,6 +64,10 @@ export class ActionWidgetDropdown extends BaseDropdown {
 	}
 
 	override show(): void {
+		if (!this.enabled) {
+			return;
+		}
+
 		let actionBarActions = this._options.actionBarActions ?? this._options.actionBarActionProvider?.getActions() ?? [];
 		const actions = this._options.actions ?? this._options.actionProvider?.getActions() ?? [];
 		const actionWidgetItems: IActionListItem<IActionWidgetDropdownAction>[] = [];
@@ -73,33 +92,47 @@ export class ActionWidgetDropdown extends BaseDropdown {
 				return aOrder - bOrder;
 			});
 
-		for (const [categoryLabel, categoryActions] of sortedCategories) {
-
-			if (categoryLabel !== '') {
-				// Push headers for each category
+		for (let i = 0; i < sortedCategories.length; i++) {
+			const [categoryLabel, categoryActions] = sortedCategories[i];
+			const showHeader = categoryActions[0]?.category?.showHeader ?? false;
+			if (showHeader && categoryLabel) {
 				actionWidgetItems.push({
-					label: categoryLabel,
 					kind: ActionListItemKind.Header,
+					label: categoryLabel,
 					canPreview: false,
 					disabled: false,
 					hideIcon: false,
 				});
 			}
+
 			// Push actions for each category
 			for (const action of categoryActions) {
 				actionWidgetItems.push({
 					item: action,
 					tooltip: action.tooltip,
 					description: action.description,
+					hover: action.hover,
+					toolbarActions: action.toolbarActions,
 					kind: ActionListItemKind.Action,
 					canPreview: false,
-					group: { title: '', icon: ThemeIcon.fromId(action.checked ? Codicon.check.id : Codicon.blank.id) },
-					disabled: false,
+					group: { title: '', icon: action.icon ?? ThemeIcon.fromId(action.checked ? Codicon.check.id : Codicon.blank.id) },
+					disabled: !action.enabled,
 					hideIcon: false,
 					label: action.label,
 					keybinding: this._options.showItemKeybindings ?
 						this.keybindingService.lookupKeybinding(action.id) :
 						undefined,
+				});
+			}
+
+			// Add separator after each category except the last one
+			if (i < sortedCategories.length - 1) {
+				actionWidgetItems.push({
+					label: '',
+					kind: ActionListItemKind.Separator,
+					canPreview: false,
+					disabled: false,
+					hideIcon: false,
 				});
 			}
 		}
@@ -121,7 +154,7 @@ export class ActionWidgetDropdown extends BaseDropdown {
 
 		actionBarActions = actionBarActions.map(action => ({
 			...action,
-			run: async (...args: any[]) => {
+			run: async (...args: unknown[]) => {
 				this.actionWidgetService.hide();
 				return action.run(...args);
 			}
@@ -131,7 +164,16 @@ export class ActionWidgetDropdown extends BaseDropdown {
 			isChecked(element) {
 				return element.kind === ActionListItemKind.Action && !!element?.item?.checked;
 			},
-			getRole: (e) => e.kind === ActionListItemKind.Action ? 'menuitemcheckbox' : 'separator',
+			getRole: (e) => {
+				switch (e.kind) {
+					case ActionListItemKind.Action:
+						return 'menuitemcheckbox';
+					case ActionListItemKind.Separator:
+						return 'separator';
+					default:
+						return 'separator';
+				}
+			},
 			getWidgetRole: () => 'menu',
 		};
 
@@ -140,10 +182,14 @@ export class ActionWidgetDropdown extends BaseDropdown {
 			false,
 			actionWidgetItems,
 			actionWidgetDelegate,
-			this.element,
+			this._options.getAnchor?.() ?? this.element,
 			undefined,
 			actionBarActions,
 			accessibilityProvider
 		);
+	}
+
+	setEnabled(enabled: boolean): void {
+		this.enabled = enabled;
 	}
 }
