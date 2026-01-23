@@ -31,6 +31,7 @@ export interface NativeParsedArgs {
 		maximize?: boolean;
 		'reuse-window'?: boolean;
 		'new-window'?: boolean;
+		profile?: string;
 		help?: boolean;
 	};
 
@@ -104,9 +105,11 @@ export interface NativeParsedArgs {
 	'skip-welcome'?: boolean;
 	'disable-telemetry'?: boolean;
 	'export-default-configuration'?: string;
+	'export-policy-data'?: string;
 	'install-source'?: string;
 	'add-mcp'?: string[];
 	'disable-updates'?: boolean;
+	'transient'?: boolean;
 	'use-inmemory-secretstorage'?: boolean;
 	'password-store'?: string;
 	'disable-workspace-trust'?: boolean;
@@ -138,7 +141,7 @@ export interface NativeParsedArgs {
 	'unresponsive-sample-period'?: string;
 	'enable-rdp-display-tracking'?: boolean;
 	'disable-layout-restore'?: boolean;
-	'startup-experiment-group'?: string;
+	'disable-experiments'?: boolean;
 
 	// chromium command line args: https://electronjs.org/docs/all#supported-chrome-command-line-switches
 	'no-proxy-server'?: boolean;

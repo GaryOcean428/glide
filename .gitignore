@@ -18,27 +18,9 @@ vscode.db
 /.profile-oss
 /cli/target
 /cli/openssl
-
-# Reports and QA audit output
-reports/
-
-# Railway environment backup
-.env.railway.backup
-.backup/
-
-# Package manager lock files - use yarn.lock instead
-package-lock.json
-*/package-lock.json
 product.overrides.json
 *.snap.actual
+*.tsbuildinfo
 .vscode-test
-
-# GIDE OAuth Environment Variables (contains secrets)
-.env
-
-# Extension VSIX files (built during Docker build)
-*.vsix
-.env.local
-.env.production
-.env.staging
-
+vscode-telemetry-docs/
+test-output.json

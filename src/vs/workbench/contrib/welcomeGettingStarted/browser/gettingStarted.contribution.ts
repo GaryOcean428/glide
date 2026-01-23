@@ -62,6 +62,7 @@ registerAction2(class extends Action2 {
 
 		const toSide = typeof optionsOrToSide === 'object' ? optionsOrToSide.toSide : optionsOrToSide;
 		const inactive = typeof optionsOrToSide === 'object' ? optionsOrToSide.inactive : false;
+		const activeEditor = editorService.activeEditor;
 
 		if (walkthroughID) {
 			const selectedCategory = typeof walkthroughID === 'string' ? walkthroughID : walkthroughID.category;
@@ -72,7 +73,6 @@ registerAction2(class extends Action2 {
 				selectedStep = undefined;
 			}
 
-			const activeEditor = editorService.activeEditor;
 			// If the walkthrough is already open just reveal the step
 			if (selectedStep && activeEditor instanceof GettingStartedInput && activeEditor.selectedCategory === selectedCategory) {
 				activeEditor.showWelcome = false;
@@ -80,8 +80,14 @@ registerAction2(class extends Action2 {
 				return;
 			}
 
-			// Otherwise open the walkthrough editor with the selected category and step
-			const options: GettingStartedEditorOptions = { selectedCategory: selectedCategory, selectedStep: selectedStep, showWelcome: false, preserveFocus: toSide ?? false, inactive };
+			let options: GettingStartedEditorOptions;
+			if (selectedCategory) {
+				// Otherwise open the walkthrough editor with the selected category and step
+				options = { selectedCategory, selectedStep, showWelcome: false, preserveFocus: toSide ?? false, inactive };
+			} else {
+				// Open Welcome page
+				options = { selectedCategory, selectedStep, showWelcome: true, preserveFocus: toSide ?? false, inactive };
+			}
 			editorService.openEditor({
 				resource: GettingStartedInput.RESOURCE,
 				options
@@ -242,27 +248,6 @@ registerAction2(class extends Action2 {
 	}
 });
 
-
-registerAction2(class extends Action2 {
-	constructor() {
-		super({
-			id: 'welcome.showNewWelcome',
-			title: localize2('welcome.showNewWelcome', 'Open New Welcome Experience'),
-			f1: true,
-		});
-	}
-
-	async run(accessor: ServicesAccessor) {
-		const editorService = accessor.get(IEditorService);
-		const options: GettingStartedEditorOptions = { selectedCategory: 'NewWelcomeExperience', forceReload: true, showTelemetryNotice: true };
-
-		editorService.openEditor({
-			resource: GettingStartedInput.RESOURCE,
-			options
-		});
-	}
-});
-
 CommandsRegistry.registerCommand({
 	id: 'welcome.newWorkspaceChat',
 	handler: (accessor, stepID: string) => {
@@ -321,7 +306,7 @@ configurationRegistry.registerConfiguration({
 		'workbench.startupEditor': {
 			'scope': ConfigurationScope.RESOURCE,
 			'type': 'string',
-			'enum': ['none', 'welcomePage', 'readme', 'newUntitledFile', 'welcomePageInEmptyWorkbench', 'terminal'],
+			'enum': ['none', 'welcomePage', 'readme', 'newUntitledFile', 'welcomePageInEmptyWorkbench', 'terminal', 'agentSessionsWelcomePage'],
 			'enumDescriptions': [
 				localize({ comment: ['This is the description for a setting. Values surrounded by single quotes are not to be translated.'], key: 'workbench.startupEditor.none' }, "Start without an editor."),
 				localize({ comment: ['This is the description for a setting. Values surrounded by single quotes are not to be translated.'], key: 'workbench.startupEditor.welcomePage' }, "Open the Welcome page, with content to aid in getting started with VS Code and extensions."),
@@ -329,6 +314,7 @@ configurationRegistry.registerConfiguration({
 				localize({ comment: ['This is the description for a setting. Values surrounded by single quotes are not to be translated.'], key: 'workbench.startupEditor.newUntitledFile' }, "Open a new untitled text file (only applies when opening an empty window)."),
 				localize({ comment: ['This is the description for a setting. Values surrounded by single quotes are not to be translated.'], key: 'workbench.startupEditor.welcomePageInEmptyWorkbench' }, "Open the Welcome page when opening an empty workbench."),
 				localize({ comment: ['This is the description for a setting. Values surrounded by single quotes are not to be translated.'], key: 'workbench.startupEditor.terminal' }, "Open a new terminal in the editor area."),
+				localize({ comment: ['This is the description for a setting. Values surrounded by single quotes are not to be translated.'], key: 'workbench.startupEditor.agentSessionsWelcomePage' }, "Open the Agent Sessions Welcome page."),
 			],
 			'default': 'welcomePage',
 			'description': localize('workbench.startupEditor', "Controls which editor is shown at startup, if none are restored from the previous session.")

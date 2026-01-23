@@ -58,6 +58,7 @@ export interface IEnvironmentService {
 	workspaceStorageHome: URI;
 	localHistoryHome: URI;
 	cacheHome: URI;
+	builtinProfilesHome: URI;
 
 	// --- settings sync
 	userDataSyncHome: URI;
@@ -83,9 +84,13 @@ export interface IEnvironmentService {
 	verbose: boolean;
 	isBuilt: boolean;
 
-	// --- telemetry
+	// --- telemetry/exp
 	disableTelemetry: boolean;
+	disableExperiments: boolean;
 	serviceMachineIdResource: URI;
+
+	// --- agent sessions workspace
+	agentSessionsWorkspace?: URI;
 
 	// --- Policy
 	policyFile?: URI;
@@ -144,6 +149,7 @@ export interface INativeEnvironmentService extends IEnvironmentService {
 	useInMemorySecretStorage?: boolean;
 
 	crossOriginIsolated?: boolean;
+	exportPolicyData?: string;
 
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	//

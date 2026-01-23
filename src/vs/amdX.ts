@@ -1,4 +1,7 @@
-import { logger } from '../base/common/structuredLogging.js';
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
 
 import { AppResourcePath, FileAccess, nodeModulesAsarPath, nodeModulesPath, Schemas, VSCODE_AUTHORITY } from './base/common/network.js';
 import * as platform from './base/common/platform.js';
@@ -35,9 +38,7 @@ class AMDModuleImporter {
 
 	private readonly _defineCalls: DefineCall[] = [];
 	private _state = AMDModuleImporterState.Uninitialized;
-	private _amdPolicy: Pick<TrustedTypePolicy<{
-		createScriptURL(value: string): string;
-	}>, 'name' | 'createScriptURL'> | undefined;
+	private _amdPolicy: Pick<TrustedTypePolicy, 'name' | 'createScriptURL'> | undefined;
 
 	constructor() { }
 
@@ -106,7 +107,7 @@ class AMDModuleImporter {
 
 		const defineCall = await (this._isWebWorker ? this._workerLoadScript(scriptSrc) : this._isRenderer ? this._rendererLoadScript(scriptSrc) : this._nodeJSLoadScript(scriptSrc));
 		if (!defineCall) {
-			logger.warn(`Did not receive a define call from script ${scriptSrc}`, { scriptSrc }, 'AMDLoader');
+			console.warn(`Did not receive a define call from script ${scriptSrc}`);
 			return <T>undefined;
 		}
 		// TODO@esm require, module

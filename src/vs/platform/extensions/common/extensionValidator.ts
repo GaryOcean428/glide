@@ -35,7 +35,7 @@ export interface INormalizedVersion {
 }
 
 const VERSION_REGEXP = /^(\^|>=)?((\d+)|x)\.((\d+)|x)\.((\d+)|x)(\-.*)?$/;
-const NOT_BEFORE_REGEXP = /^-(\d{4})(\d{2})(\d{2})$/;
+const NOT_BEFORE_REGEXP = /^-(\d{4})(\d{2})(\d{2})(\d{2})?(\d{2})?$/;
 
 export function isValidVersionStr(version: string): boolean {
 	version = version.trim();
@@ -105,8 +105,8 @@ export function normalizeVersion(version: IParsedVersion | null): INormalizedVer
 	if (version.preRelease) {
 		const match = NOT_BEFORE_REGEXP.exec(version.preRelease);
 		if (match) {
-			const [, year, month, day] = match;
-			notBefore = Date.UTC(Number(year), Number(month) - 1, Number(day));
+			const [, year, month, day, hours, minutes] = match;
+			notBefore = Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hours) || 0, Number(minutes) || 0);
 		}
 	}
 
@@ -352,12 +352,12 @@ export function isEngineValid(engine: string, version: string, date: ProductDate
 export function areApiProposalsCompatible(apiProposals: string[]): boolean;
 export function areApiProposalsCompatible(apiProposals: string[], notices: string[]): boolean;
 export function areApiProposalsCompatible(apiProposals: string[], productApiProposals: Readonly<{ [proposalName: string]: Readonly<{ proposal: string; version?: number }> }>): boolean;
-export function areApiProposalsCompatible(apiProposals: string[], arg1?: any): boolean {
+export function areApiProposalsCompatible(apiProposals: string[], arg1?: string[] | Readonly<{ [proposalName: string]: Readonly<{ proposal: string; version?: number }> }>): boolean {
 	if (apiProposals.length === 0) {
 		return true;
 	}
 	const notices: string[] | undefined = Array.isArray(arg1) ? arg1 : undefined;
-	const productApiProposals: Readonly<{ [proposalName: string]: Readonly<{ proposal: string; version?: number }> }> = (notices ? undefined : arg1) ?? allApiProposals;
+	const productApiProposals: Readonly<{ [proposalName: string]: Readonly<{ proposal: string; version?: number }> }> = (Array.isArray(arg1) ? undefined : arg1) ?? allApiProposals;
 	const incompatibleProposals: string[] = [];
 	const parsedProposals = parseApiProposals(apiProposals);
 	for (const { proposalName, version } of parsedProposals) {
@@ -417,7 +417,7 @@ function isVersionValid(currentVersion: string, date: ProductDate, requestedVers
 	return true;
 }
 
-function isStringArray(arr: string[]): boolean {
+function isStringArray(arr: readonly string[]): boolean {
 	if (!Array.isArray(arr)) {
 		return false;
 	}
