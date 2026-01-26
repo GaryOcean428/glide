@@ -148,6 +148,23 @@ A backup branch `backup-before-upstream-sync` was created before the sync, conta
 - The codebase now benefits from the latest VS Code improvements while maintaining custom features
 - Some upstream workflow files were removed (railway-deploy.yml, validate-deploy.yml) as part of upstream changes
 
+## Railway Configuration Migration
+
+**Nixpacks to Railpack v2 Migration**:
+- Replaced `railpack.json` with proper `railway.json` configuration
+- Explicitly set `"builder": "RAILPACK"` (Nixpacks is now deprecated on Railway)
+- Configured build command: `yarn install --frozen-lockfile && chmod +x scripts/railway-vscode-server.mjs`
+- Preserved all VS Code build optimization environment variables:
+  - `ELECTRON_SKIP_BINARY_DOWNLOAD=1`
+  - `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1`
+  - `PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true`
+  - `NPM_CONFIG_OPTIONAL=false`
+  - `SKIP_NATIVE_MODULES=1`
+  - `NODE_ENV=production`
+  - `VSCODE_SKIP_NODE_VERSION_CHECK=1`
+- Health check endpoint: `/api/health` (300s timeout)
+- Restart policy: `ON_FAILURE` with 3 max retries
+
 ## Next Steps for Testing
 
 1. Install dependencies: `npm install`
