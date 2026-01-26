@@ -11,7 +11,8 @@
     "steps": {
       "setup": {
         "commands": [
-          "corepack enable && corepack prepare yarn@4.9.2 --activate"
+          "corepack enable && corepack prepare yarn@4.9.2 --activate",
+          "npm install -g tsx"
         ]
       },
       "install": {
