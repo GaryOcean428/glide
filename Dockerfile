@@ -6,8 +6,9 @@ RUN useradd -m -s /bin/bash coder && \
     mkdir -p /home/coder/.local/share && \
 	    chown -R coder:coder /home/coder
 
-		# Set working directory
+		# Set working directory and ensure coder owns it
 		WORKDIR /workspace
+		RUN chown -R coder:coder /workspace
 
 		# Install system dependencies required for VS Code build
 		RUN apt-get update && apt-get install -y \
