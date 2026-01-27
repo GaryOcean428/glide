@@ -44,8 +44,8 @@ RUN useradd -m -s /bin/bash coder && \
 																    NODE_ENV=production \
 																	    VSCODE_SKIP_NODE_VERSION_CHECK=1
 
-																		# Install dependencies and build
-																		RUN npm install && \
+																		# Install dependencies and build (skip preinstall script that checks for yarn)
+																		RUN npm install --ignore-scripts && \
 																		    npm run compile && \
 																			    chmod +x scripts/railway-vscode-server.mjs
 
