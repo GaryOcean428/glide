@@ -22,18 +22,18 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-# Switch to coder user
+# Enable corepack and use latest Yarn 4 (as root)
+RUN corepack enable && \
+    corepack prepare yarn@latest --activate
+
+# Install tsx globally for TypeScript execution (as root)
+RUN npm install -g tsx
+
+# Switch to coder user for the build
 USER coder
 
 # Copy package files first for better layer caching
 COPY --chown=coder:coder package.json yarn.lock .nvmrc ./
-
-# Enable corepack and use latest Yarn 4
-RUN corepack enable && \
-    corepack prepare yarn@latest --activate
-
-# Install tsx globally for TypeScript execution
-RUN npm install -g tsx
 
 # Copy the entire codebase
 COPY --chown=coder:coder . .
