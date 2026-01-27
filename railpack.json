@@ -6,37 +6,8 @@
     "description": "VS Code fork with Gide AI coding agent extension"
   },
   "build": {
-    "provider": "node",
-    "nodeVersion": "22",
-    "steps": {
-      "setup": {
-        "commands": [
-          "corepack enable && corepack prepare yarn@4.9.2 --activate",
-          "npm install -g tsx"
-        ]
-      },
-      "install": {
-        "commands": [
-          "yarn install --frozen-lockfile"
-        ]
-      },
-      "build": {
-        "commands": [
-          "yarn build",
-          "chmod +x scripts/railway-vscode-server.mjs"
-        ]
-      }
-    },
-    "env": {
-      "RAILPACK_PRUNE_DEPS": "false",
-      "ELECTRON_SKIP_BINARY_DOWNLOAD": "1",
-      "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1",
-      "PUPPETEER_SKIP_CHROMIUM_DOWNLOAD": "true",
-      "NPM_CONFIG_OPTIONAL": "false",
-      "SKIP_NATIVE_MODULES": "1",
-      "NODE_ENV": "production",
-      "VSCODE_SKIP_NODE_VERSION_CHECK": "1"
-    }
+    "provider": "docker",
+    "dockerfile": "Dockerfile"
   },
   "deploy": {
     "startCommand": "node scripts/railway-vscode-server.mjs",
