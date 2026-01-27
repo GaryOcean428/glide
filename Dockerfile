@@ -29,7 +29,7 @@ RUN useradd -m -s /bin/bash coder && \
 												USER coder
 
 												# Copy package files first for better layer caching
-												COPY --chown=coder:coder package.json package-lock.json .nvmrc ./
+												COPY --chown=coder:coder package.json .nvmrc ./
 
 												# Copy the entire codebase
 												COPY --chown=coder:coder . .
@@ -44,7 +44,7 @@ RUN useradd -m -s /bin/bash coder && \
 																	    VSCODE_SKIP_NODE_VERSION_CHECK=1
 
 																		# Install dependencies and build
-																		RUN npm ci && \
+																		RUN npm install && \
 																		    npm run compile && \
 																			    chmod +x scripts/railway-vscode-server.mjs
 
