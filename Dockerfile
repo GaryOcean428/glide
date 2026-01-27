@@ -1,5 +1,5 @@
-# Start from Node.js 22 (required by VS Code 1.109.0)
-FROM node:22-bullseye
+# Start from Node.js 22 on Debian Bookworm (required for C++20 support)
+FROM node:22-bookworm
 
 # Create a non-root user
 RUN useradd -m -s /bin/bash coder && \
